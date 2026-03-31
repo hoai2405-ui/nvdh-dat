@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id           Int     @id @default(autoincrement())
+  fullName     String
+  dob          String?
+  cccd         String  @unique
+  address      String? @db.Text
+  className    String?
+  cabinStatus  String? @default("chưa học")
+  gvSoSan      String? @default("")
+  xeSoSan      String? @default("")
+  gvTuDong     String? @default("")
+  xeTuDong     String? @default("")
+  ngayDat      String? @default("")
+  dot          String? @default("")
+  ghiChu      String? @default("")
+}
+
+model Instructor {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  type  String
+}
+
+model Vehicle {
+  id    Int    @id @default(autoincrement())
+  plate String @unique
+  type  String
+}
+
+model Box {
+  id            Int     @id @default(autoincrement())
+  name          String  @unique
+  status       String  @default("trong") // "trong" | "dang_muon"
+  gvMuon       String?
+  ngayMuon     String?
+  gvTra        String?
+  ngayTra      String?
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  role     String @default("staff") // "admin" | "staff"
+}
