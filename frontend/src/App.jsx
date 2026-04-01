@@ -8,7 +8,7 @@ import Login from './components/Login';
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const formatDate = (dob) => {
   if (!dob || dob.length !== 8) return 'Chưa có';
