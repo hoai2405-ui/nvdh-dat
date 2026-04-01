@@ -9,6 +9,16 @@ const app = express();
 const prisma = new PrismaClient();
 const upload = multer();
 
+prisma.$connect().then(async () => {
+    const count = await prisma.user.count();
+    if (count === 0) {
+        await prisma.user.create({
+            data: { username: "admin", password: "123456", role: "admin" }
+        });
+        console.log("✅ Created default admin user");
+    }
+});
+
 app.use(cors({
     origin: ['http://localhost:5173', 'https://nvdh.netlify.app'],
     credentials: true
