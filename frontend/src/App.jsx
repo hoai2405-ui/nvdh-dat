@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Layout, Menu, Table, Button, Upload, Select, Tag, Space, Card, Input, Form, Typography, ConfigProvider, App as AntdApp, message, DatePicker, TimePicker, Popconfirm, Modal, Dropdown } from 'antd';
-import { Users, CarFront, UserCheck, FileUp, RefreshCw, Trash2, Plus, Database, Package, Download, Check, X, LogOut, Settings, ChevronDown, Menu } from 'lucide-react';
+import { Users, CarFront, UserCheck, FileUp, RefreshCw, Trash2, Plus, Database, Package, Download, Check, X, LogOut, Settings, ChevronDown, Menu as MenuIcon } from 'lucide-react';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import Login from './components/Login';
@@ -24,6 +24,15 @@ const MainApp = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const [searchText, setSearchText] = useState('');
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedDot, setSelectedDot] = useState('1');
@@ -313,10 +322,10 @@ const MainApp = ({ user, onLogout }) => {
 ];
 
   return (
-    <>
+    <div style={{width: '100%'}}>
       <div className="mobile-overlay" style={{display: mobileMenuOpen ? 'block' : 'none'}} onClick={() => setMobileMenuOpen(false)} />
-      <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{display: window.innerWidth <= 768 ? 'flex' : 'none'}}>
-        {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+      <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{display: isMobile ? 'flex' : 'none'}}>
+        {mobileMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
       </button>
       <Layout style={{ minHeight: '100vh' }}>
         {/* SIDEBAR */}
@@ -325,10 +334,10 @@ const MainApp = ({ user, onLogout }) => {
           collapsed={collapsed} 
           onCollapse={(val) => {
             setCollapsed(val);
-            if (window.innerWidth <= 768) setMobileMenuOpen(false);
+            if (isMobile) setMobileMenuOpen(false);
           }} 
           width={240} 
-          style={{background: '#1e293b', position: window.innerWidth <= 768 ? 'fixed' : 'relative', zIndex: 1000, height: '100vh'}}
+          style={{background: '#1e293b', position: isMobile ? 'fixed' : 'relative', zIndex: 1000, height: '100vh'}}
           trigger={null}
         >
         <div style={{padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
@@ -338,7 +347,7 @@ const MainApp = ({ user, onLogout }) => {
             </div>
             {!collapsed && <span style={{fontWeight: 700, fontSize: '16px', color: 'white'}}>Tiện ích NVDH</span>}
           </div>
-          {window.innerWidth <= 768 && (
+          {isMobile && (
             <X size={20} color="white" style={{cursor: 'pointer'}} onClick={() => setMobileMenuOpen(false)} />
           )}
         </div>
@@ -348,7 +357,7 @@ const MainApp = ({ user, onLogout }) => {
           onClick={({key}) => {
             if (key === 'users' && !isAdmin) return;
             setCurrentMenu(key);
-            if (window.innerWidth <= 768) setMobileMenuOpen(false);
+            if (isMobile) setMobileMenuOpen(false);
           }}
           items={[
             { key: 'students', icon: <Users size={18}/>, label: 'Quản lý Học viên' },
@@ -677,6 +686,7 @@ const MainApp = ({ user, onLogout }) => {
         </Content>
       </Layout>
     </Layout>
+    </div>
   );
 };
 

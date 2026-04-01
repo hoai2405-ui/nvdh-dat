@@ -134,22 +134,44 @@ app.post('/api/import-xml', upload.single('file'), async (req, res) => {
         let rawStudents = jsonObj.BAO_CAO1?.DATA?.NGUOI_LXS?.NGUOI_LX || [];
         if (!Array.isArray(rawStudents)) rawStudents = [rawStudents];
 
-        for (let s of rawStudents) {
-            if (!s.SO_CMT) continue;
-            await prisma.student.upsert({
-                where: { cccd: String(s.SO_CMT) },
-                update: { fullName: s.HO_VA_TEN, className: classInfo },
-                create: {
-                    fullName: s.HO_VA_TEN,
-                    cccd: String(s.SO_CMT),
-                    dob: s.NGAY_SINH ? String(s.NGAY_SINH) : "",
-                    address: s.NOI_TT || "",
-                    className: classInfo
-                }
-            });
+        const studentsToUpsert = rawStudents
+            .filter(s => s.SO_CMT)
+            .map(s => ({
+                cccd: String(s.SO_CMT),
+                fullName: s.HO_VA_TEN,
+                dob: s.NGAY_SINH ? String(s.NGAY_SINH) : "",
+                address: s.NOI_TT || "",
+                className: classInfo
+            }));
+
+        if (studentsToUpsert.length === 0) {
+            return res.json({ message: "Không có dữ liệu" });
         }
-        res.json({ message: "OK" });
+
+        const cccds = studentsToUpsert.map(s => s.cccd);
+        const existing = await prisma.student.findMany({
+            where: { cccd: { in: cccds } },
+            select: { cccd: true }
+        });
+        const existingSet = new Set(existing.map(e => e.cccd));
+
+        const toCreate = studentsToUpsert.filter(s => !existingSet.has(s.cccd));
+        const toUpdate = studentsToUpsert.filter(s => existingSet.has(s.cccd));
+
+        if (toCreate.length > 0) {
+            await prisma.student.createMany({ data: toCreate, skipDuplicates: true });
+        }
+
+        await Promise.all(toUpdate.map(s => 
+            prisma.student.update({
+                where: { cccd: s.cccd },
+                data: { fullName: s.fullName, className: s.className }
+            })
+        ));
+
+        res.json({ message: `Đã import ${studentsToUpsert.length} học viên` });
     } catch (e) {
+        console.error(e);
         res.status(500).json({ error: "Lỗi file" });
     }
 });
