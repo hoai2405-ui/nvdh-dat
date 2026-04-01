@@ -323,7 +323,7 @@ const MainApp = ({ user, onLogout }) => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      {/* SIDEBAR */}
+      {/* SIDEBAR - Desktop: normal, Mobile: fixed overlay */}
       <Sider 
         collapsible 
         collapsed={collapsed} 
@@ -332,14 +332,25 @@ const MainApp = ({ user, onLogout }) => {
         breakpoint="md"
         style={{
           background: '#1e293b',
-          zIndex: 999
+          position: isMobile ? 'fixed' : 'relative',
+          zIndex: isMobile ? 1001 : 1,
+          height: isMobile ? '100vh' : '100%',
+          left: isMobile ? (mobileMenuOpen ? 0 : -240) : undefined,
+          transition: isMobile ? 'left 0.3s ease' : undefined
         }}
+        trigger={isMobile ? null : undefined}
+        collapsedWidth={isMobile ? 0 : 80}
       >
-        <div style={{padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
-          <div style={{padding: '8px', borderRadius: '8px', background: '#3b82f6'}}>
-            <CarFront size={20} color="white" />
+        <div style={{padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+            <div style={{padding: '8px', borderRadius: '8px', background: '#3b82f6'}}>
+              <CarFront size={20} color="white" />
+            </div>
+            {!collapsed && <span style={{fontWeight: 700, fontSize: '16px', color: 'white'}}>Tiện ích NVDH</span>}
           </div>
-          {!collapsed && <span style={{fontWeight: 700, fontSize: '16px', color: 'white'}}>Tiện ích NVDH</span>}
+          {isMobile && (
+            <X size={20} color="white" style={{cursor: 'pointer'}} onClick={() => setMobileMenuOpen(false)} />
+          )}
         </div>
         <Menu
           mode="inline"
@@ -347,6 +358,7 @@ const MainApp = ({ user, onLogout }) => {
           onClick={({key}) => {
             if (key === 'users' && !isAdmin) return;
             setCurrentMenu(key);
+            if (isMobile) setMobileMenuOpen(false);
           }}
           items={[
             { key: 'students', icon: <Users size={18}/>, label: 'Quản lý Học viên' },
@@ -360,6 +372,30 @@ const MainApp = ({ user, onLogout }) => {
           style={{background: 'transparent', border: 'none'}}
         />
       </Sider>
+
+      {/* Mobile overlay */}
+      {isMobile && mobileMenuOpen && (
+        <div 
+          style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000}} 
+          onClick={() => setMobileMenuOpen(false)} 
+        />
+      )}
+
+      {/* Mobile menu button */}
+      {isMobile && !mobileMenuOpen && (
+        <button 
+          onClick={() => setMobileMenuOpen(true)} 
+          style={{
+            position: 'fixed', bottom: 20, right: 20, zIndex: 999, 
+            width: 50, height: 50, borderRadius: '25px', background: '#3b82f6', 
+            color: 'white', border: 'none', cursor: 'pointer', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+            boxShadow: '0 4px 12px rgba(59,130,246,0.4)'
+          }}
+        >
+          <MenuIcon size={24} />
+        </button>
+      )}
 
       {/* RIGHT CONTENT */}
       <Layout>
@@ -674,7 +710,8 @@ const MainApp = ({ user, onLogout }) => {
           )}
         </Content>
       </Layout>
-    </Layout>
+      </Layout>
+    </div>
   );
 };
 
