@@ -322,22 +322,33 @@ const MainApp = ({ user, onLogout }) => {
 ];
 
   return (
-    <div style={{width: '100%'}}>
-      <div className="mobile-overlay" style={{display: mobileMenuOpen ? 'block' : 'none'}} onClick={() => setMobileMenuOpen(false)} />
-      <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{display: isMobile ? 'flex' : 'none'}}>
-        {mobileMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
-      </button>
+    <div style={{width: '100%', marginLeft: isMobile && mobileMenuOpen ? '240px' : '0', transition: 'margin-left 0.3s ease'}}>
+      {isMobile && mobileMenuOpen && (
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000}} onClick={() => setMobileMenuOpen(false)} />
+      )}
+      {!mobileMenuOpen && isMobile && (
+        <button onClick={() => setMobileMenuOpen(true)} style={{position: 'fixed', bottom: 20, right: 20, zIndex: 999, width: 50, height: 50, borderRadius: '25px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(59,130,246,0.4)'}}>
+          <MenuIcon size={24} />
+        </button>
+      )}
       <Layout style={{ minHeight: '100vh' }}>
         {/* SIDEBAR */}
         <Sider 
           collapsible 
-          collapsed={collapsed} 
+          collapsed={isMobile ? false : collapsed} 
           onCollapse={(val) => {
             setCollapsed(val);
             if (isMobile) setMobileMenuOpen(false);
           }} 
           width={240} 
-          style={{background: '#1e293b', position: isMobile ? 'fixed' : 'relative', zIndex: 1000, height: '100vh'}}
+          style={{
+            background: '#1e293b', 
+            position: 'fixed', 
+            zIndex: 1001, 
+            height: '100vh',
+            transform: (!isMobile && collapsed) ? 'translateX(-100%)' : (isMobile && !mobileMenuOpen) ? 'translateX(-100%)' : 'translateX(0)',
+            transition: 'transform 0.3s ease'
+          }}
           trigger={null}
         >
         <div style={{padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
@@ -685,7 +696,7 @@ const MainApp = ({ user, onLogout }) => {
           )}
         </Content>
       </Layout>
-    </Layout>
+      </Layout>
     </div>
   );
 };
