@@ -9,7 +9,10 @@ const app = express();
 const prisma = new PrismaClient();
 const upload = multer();
 
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173', 'https://nvdh.netlify.app'],
+    credentials: true
+}));
 app.use(express.json());
 
 // --- AUTH ---
