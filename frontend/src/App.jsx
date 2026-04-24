@@ -4,6 +4,7 @@ import { Users, CarFront, UserCheck, FileUp, RefreshCw, Trash2, Plus, Database, 
 import axios from 'axios';
 import dayjs from 'dayjs';
 import Login from './components/Login';
+import { api } from './api';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -16,8 +17,7 @@ const formatDate = (dob) => {
 };
 
 const MainApp = ({ user, onLogout }) => {
-  const [currentMenu, setCurrentMenu] = useState('students');
-  const [students, setStudents] = useState([]);
+  const [currentMenu, setCurrentMenu] = useState('boxes');
   const [instructors, setInstructors] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [boxes, setBoxes] = useState([]);
@@ -41,16 +41,23 @@ const MainApp = ({ user, onLogout }) => {
 
   const isAdmin = user?.role === 'admin';
 
+  const menuItems = [
+    { key: 'boxes', icon: <Package size={18}/>, label: 'Phân hộp DAT' },
+    { key: 'instructors', icon: <UserCheck size={18}/>, label: 'Danh mục Giáo viên' },
+    { key: 'vehicles', icon: <CarFront size={18}/>, label: 'Danh mục Xe tập' },
+  ];
+  if (isAdmin) {
+    menuItems.push({ key: 'users', icon: <Settings size={18}/>, label: 'Quản lý User' });
+  }
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [s, i, v, b] = await Promise.all([
-        axios.get(`${API_BASE}/students`),
-        axios.get(`${API_BASE}/instructors`),
-        axios.get(`${API_BASE}/vehicles`),
-        axios.get(`${API_BASE}/boxes`)
+      const [i, v, b] = await Promise.all([
+        api.getInstructors(),
+        api.getVehicles(),
+        api.getBoxes()
       ]);
-      setStudents(s.data);
       setInstructors(i.data);
       setVehicles(v.data);
       setBoxes(b.data);
@@ -348,15 +355,7 @@ const MainApp = ({ user, onLogout }) => {
             if (key === 'users' && !isAdmin) return;
             setCurrentMenu(key);
           }}
-          items={[
-            { key: 'students', icon: <Users size={18}/>, label: 'Quản lý Học viên' },
-            ...(isAdmin ? [
-              { key: 'boxes', icon: <Package size={18}/>, label: 'Phân hộp DAT' },
-              { key: 'instructors', icon: <UserCheck size={18}/>, label: 'Danh mục Giáo viên' },
-              { key: 'vehicles', icon: <CarFront size={18}/>, label: 'Danh mục Xe tập' },
-              { key: 'users', icon: <Settings size={18}/>, label: 'Quản lý User' },
-            ] : [])
-          ]}
+          items={menuItems}
           style={{background: 'transparent', border: 'none'}}
         />
       </Sider>
@@ -401,97 +400,6 @@ const MainApp = ({ user, onLogout }) => {
         </Header>
 
         <Content style={{padding: '16px', background: 'linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%)'}}>
-          {currentMenu === 'students' && (
-            <>
-              <div className="stats-row" style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)', borderLeft: '4px solid #3b82f6', flex: 1, minWidth: '140px'}}>
-                  <div style={{padding: '8px', borderRadius: '10px', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'white'}}><Users size={16} /></div>
-                  <div>
-                    <div style={{fontSize: '11px', color: '#64748b', fontWeight: 500}}>Tổng học viên</div>
-                    <div style={{fontSize: '22px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2}}>{filteredStudents.length}</div>
-                  </div>
-                </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(34, 197, 94, 0.15)', borderLeft: '4px solid #22c55e', flex: 1, minWidth: '140px'}}>
-                  <div style={{padding: '8px', borderRadius: '10px', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white'}}><UserCheck size={16} /></div>
-                  <div>
-                    <div style={{fontSize: '11px', color: '#64748b', fontWeight: 500}}>Đã Cabin</div>
-                    <div style={{fontSize: '22px', fontWeight: 700, color: '#16a34a', lineHeight: 1.2}}>{filteredStudents.filter(s=>s.cabinStatus==='đã học').length}</div>
-                  </div>
-                </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(249, 115, 22, 0.15)', borderLeft: '4px solid #f97316', flex: 1, minWidth: '140px'}}>
-                  <div style={{padding: '8px', borderRadius: '10px', background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white'}}><RefreshCw size={16} /></div>
-                  <div>
-                    <div style={{fontSize: '11px', color: '#64748b', fontWeight: 500}}>Chưa phân GV</div>
-                    <div style={{fontSize: '22px', fontWeight: 700, color: '#ea580c', lineHeight: 1.2}}>{filteredStudents.filter(s=>!s.gvSoSan).length}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="filter-row" style={{display: 'flex', gap: '12px', marginBottom: '12px'}}>
-                <Input
-                  placeholder="Tìm kiếm theo tên hoặc CCCD..."
-                  prefix={<span style={{color: '#94a3b8'}}>🔍</span>}
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  style={{flex: 1, borderRadius: '10px', border: '2px solid #e2e8f0'}}
-                  allowClear
-                />
-                <Select
-                  placeholder="Lọc theo lớp"
-                  value={selectedClass}
-                  onChange={(val) => { setSelectedClass(val); }}
-                  allowClear
-                  style={{width: '200px', borderRadius: '10px'}}
-                  options={uniqueClasses.map(c => ({label: c, value: c}))}
-                />
-                {selectedClass && (
-                  <Popconfirm
-                    title={`Xóa toàn bộ học viên lớp "${selectedClass}"?`}
-                    description="Hành động này không thể hoàn tác"
-                    onConfirm={async () => {
-                      try {
-                        await axios.delete(`${API_BASE}/students/class/${selectedClass}`);
-                        message.success('Đã xóa khóa học');
-                        setSelectedClass(null);
-                        fetchData();
-                      } catch (e) {
-                        message.error('Lỗi xóa khóa học');
-                      }
-                    }}
-                    okText="Xóa"
-                    cancelText="Hủy"
-                    okButtonProps={{ danger: true }}
-                  >
-                    <Button danger icon={<Trash2 size={16} />}>
-                      Xóa lớp
-                    </Button>
-                  </Popconfirm>
-                )}
-                <Select
-                  value={selectedDot}
-                  onChange={(val) => { setSelectedDot(val); }}
-                  style={{width: '130px', borderRadius: '10px'}}
-                  options={[
-                    { label: 'Đợt 1', value: '1' },
-                    { label: 'Đợt 2', value: '2' },
-                    { label: 'Đợt 3', value: '3' },
-                  ]}
-                />
-              </div>
-
-              <Card variant="borderless" style={{boxShadow: '0 4px 12px rgba(0,0,0,0.08)', borderRadius: '12px', border: '1px solid #e2e8f0'}}>
-                <Table 
-                  dataSource={filteredStudents} 
-                  columns={studentColumns} 
-                  rowKey="id" 
-                  loading={loading}
-                  size="small"
-                  pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (t) => `${t} học viên` }}
-                />
-              </Card>
-            </>
-          )}
-
           {currentMenu === 'instructors' && (
             <Card 
               title={<div style={{display: 'flex', alignItems: 'center', gap: '8px'}}><UserCheck size={18} style={{color: '#3b82f6'}}/>Danh mục Giáo viên</div>}
@@ -499,16 +407,15 @@ const MainApp = ({ user, onLogout }) => {
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
               extra={<span style={{color: '#94a3b8', fontSize: '13px'}}>{instructors.length} giáo viên</span>}
             >
-              <Form layout="inline" style={{marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await axios.post(`${API_BASE}/instructors`,v); fetchData(); message.success('Thêm giáo viên thành công');}}>
+              <Form layout="inline" style={{marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await api.addInstructor(v); fetchData(); message.success('Thêm giáo viên thành công');}}>
                 <Form.Item name="name" required style={{flex: 1, marginBottom: 0}}><Input placeholder="Tên giáo viên" /></Form.Item>
-                <Form.Item name="type" initialValue="Số sàn" style={{marginBottom: 0, minWidth: '130px'}}><Select options={[{value:'Số sàn'}, {value:'Tự động'}]}/></Form.Item>
                 <Button type="primary" htmlType="submit" icon={<Plus size={16}/>}>Thêm</Button>
               </Form>
               <Table dataSource={instructors} rowKey="id" columns={[
                 {title: 'STT', render: (_, __, i) => i + 1, width: 60},
                 {title: 'Họ và tên', dataIndex: 'name', width: 250, render: (t) => <span style={{fontWeight: 500}}>{t}</span>},
-                {title: 'Loại đào tạo', dataIndex: 'type', render: (t) => <Tag color={t === 'Số sàn' ? 'blue' : 'orange'}>{t}</Tag>},
-                {title: '', width: 60, render: (r) => <Button danger type="text" icon={<Trash2 size={16}/>} onClick={async()=>{await axios.delete(`${API_BASE}/instructors/${r.id}`); fetchData(); message.success('Đã xóa');}} />}
+                {title: 'Điện thoại', dataIndex: 'phone', width: 150},
+                {title: '', width: 60, render: (r) => <Button danger type="text" icon={<Trash2 size={16}/>} onClick={async()=>{await api.deleteInstructor(r.id); fetchData(); message.success('Đã xóa');}} />}
               ]} />
             </Card>
           )}
@@ -520,7 +427,7 @@ const MainApp = ({ user, onLogout }) => {
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
               extra={<span style={{color: '#94a3b8', fontSize: '13px'}}>{vehicles.length} xe</span>}
             >
-              <Form layout="inline" style={{marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await axios.post(`${API_BASE}/vehicles`,v); fetchData(); message.success('Thêm xe thành công');}}>
+              <Form layout="inline" style={{marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await api.addVehicle(v); fetchData(); message.success('Thêm xe thành công');}}>
                 <Form.Item name="plate" required style={{flex: 1, marginBottom: 0}}><Input placeholder="Biển số xe" /></Form.Item>
                 <Form.Item name="type" initialValue="Số sàn" style={{marginBottom: 0, minWidth: '130px'}}><Select options={[{value:'Số sàn'}, {value:'Tự động'}]}/></Form.Item>
                 <Button type="primary" htmlType="submit" icon={<Plus size={16}/>}>Thêm</Button>
@@ -529,7 +436,7 @@ const MainApp = ({ user, onLogout }) => {
                 {title: 'STT', render: (_, __, i) => i + 1, width: 60},
                 {title: 'Biển số', dataIndex: 'plate', render: (t) => <span style={{fontFamily: 'monospace', fontWeight: 600, background: '#f1f5f9', padding: '4px 10px', borderRadius: '6px'}}>{t}</span>},
                 {title: 'Loại xe', dataIndex: 'type', render: (t) => <Tag color={t === 'Số sàn' ? 'orange' : 'purple'}>{t}</Tag>},
-                {title: '', render: (r) => <Button danger type="text" icon={<Trash2 size={16}/>} onClick={async()=>{await axios.delete(`${API_BASE}/vehicles/${r.id}`); fetchData(); message.success('Đã xóa');}} />}
+                {title: '', render: (r) => <Button danger type="text" icon={<Trash2 size={16}/>} onClick={async()=>{await api.deleteVehicle(r.id); fetchData(); message.success('Đã xóa');}} />}
               ]} />
             </Card>
           )}
@@ -569,7 +476,7 @@ const MainApp = ({ user, onLogout }) => {
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
               extra={<span style={{color: '#94a3b8', fontSize: '13px'}}>{boxes.length} hộp</span>}
             >
-              <Form layout="inline" style={{marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await axios.post(`${API_BASE}/boxes`,{...v, status: 'trong'}); fetchData(); message.success('Thêm hộp thành công');}}>
+              <Form layout="inline" style={{marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await api.addBox(v); fetchData(); message.success('Thêm hộp thành công');}}>
                 <Form.Item name="name" required style={{flex: 1, marginBottom: 0}}><Input placeholder="Tên hộp (VD: Hộp 1)" /></Form.Item>
                 <Button type="primary" htmlType="submit" icon={<Plus size={16}/>}>Thêm hộp</Button>
               </Form>
@@ -595,7 +502,7 @@ const MainApp = ({ user, onLogout }) => {
                     placeholder="Chọn GV"
                     value={r.gvMuon || undefined}
                     onChange={(v) => {
-                      axios.patch(`${API_BASE}/boxes/${r.id}`, {gvMuon: v, status: 'dang_muon'}).then(() => fetchData());
+                      api.updateBox(r.id, {gvMuon: v, status: 'dang_muon'}).then(() => fetchData());
                     }}
                     options={instructors.map(i => ({label: i.name, value: i.name}))}
                     style={{width: '100%'}}
@@ -610,7 +517,7 @@ const MainApp = ({ user, onLogout }) => {
                       value={r.ngayMuon ? dayjs(r.ngayMuon.split(' ')[0], 'DD/MM/YYYY') : null}
                       onChange={(date, dateStr) => {
                         const timeStr = r.ngayMuon ? r.ngayMuon.split(' ')[1] : '08:00';
-                        axios.patch(`${API_BASE}/boxes/${r.id}`, {ngayMuon: dateStr ? `${dateStr} ${timeStr}` : ''}).then(() => fetchData());
+                        api.updateBox(r.id, {ngayMuon: dateStr ? `${dateStr} ${timeStr}` : ''}).then(() => fetchData());
                       }}
                       style={{width: '110px'}}
                     />
@@ -621,7 +528,7 @@ const MainApp = ({ user, onLogout }) => {
                       value={r.ngayMuon ? dayjs(r.ngayMuon.split(' ')[1], 'HH:mm') : null}
                       onChange={(time, timeStr) => {
                         const dateStr = r.ngayMuon ? r.ngayMuon.split(' ')[0] : dayjs().format('DD/MM/YYYY');
-                        axios.patch(`${API_BASE}/boxes/${r.id}`, {ngayMuon: timeStr ? `${dateStr} ${timeStr}` : ''}).then(() => fetchData());
+                        api.updateBox(r.id, {ngayMuon: timeStr ? `${dateStr} ${timeStr}` : ''}).then(() => fetchData());
                       }}
                       minuteStep={15}
                       style={{width: '80px'}}
@@ -635,7 +542,7 @@ const MainApp = ({ user, onLogout }) => {
                     placeholder="Chọn GV"
                     value={r.gvTra || undefined}
                     onChange={(v) => {
-                      axios.patch(`${API_BASE}/boxes/${r.id}`, {gvTra: v, status: 'trong'}).then(() => fetchData());
+                      api.updateBox(r.id, {gvTra: v, status: 'trong'}).then(() => fetchData());
                     }}
                     options={instructors.map(i => ({label: i.name, value: i.name}))}
                     style={{width: '100%'}}
@@ -650,7 +557,7 @@ const MainApp = ({ user, onLogout }) => {
                       value={r.ngayTra ? dayjs(r.ngayTra.split(' ')[0], 'DD/MM/YYYY') : null}
                       onChange={(date, dateStr) => {
                         const timeStr = r.ngayTra ? r.ngayTra.split(' ')[1] : '17:00';
-                        axios.patch(`${API_BASE}/boxes/${r.id}`, {ngayTra: dateStr ? `${dateStr} ${timeStr}` : ''}).then(() => fetchData());
+                        api.updateBox(r.id, {ngayTra: dateStr ? `${dateStr} ${timeStr}` : ''}).then(() => fetchData());
                       }}
                       style={{width: '110px'}}
                     />
@@ -661,14 +568,14 @@ const MainApp = ({ user, onLogout }) => {
                       value={r.ngayTra ? dayjs(r.ngayTra.split(' ')[1], 'HH:mm') : null}
                       onChange={(time, timeStr) => {
                         const dateStr = r.ngayTra ? r.ngayTra.split(' ')[0] : dayjs().format('DD/MM/YYYY');
-                        axios.patch(`${API_BASE}/boxes/${r.id}`, {ngayTra: timeStr ? `${dateStr} ${timeStr}` : ''}).then(() => fetchData());
+                        api.updateBox(r.id, {ngayTra: timeStr ? `${dateStr} ${timeStr}` : ''}).then(() => fetchData());
                       }}
                       minuteStep={15}
                       style={{width: '80px'}}
                     />
                   </div>
                 )},
-                {title: '', width: 50, render: (r) => <Button danger type="text" icon={<Trash2 size={16}/>} onClick={async()=>{await axios.delete(`${API_BASE}/boxes/${r.id}`); fetchData(); message.success('Đã xóa');}} />}
+                {title: '', width: 50, render: (r) => <Button danger type="text" icon={<Trash2 size={16}/>} onClick={async()=>{await api.deleteBox(r.id); fetchData(); message.success('Đã xóa');}} />}
               ]} />
             </Card>
           )}
