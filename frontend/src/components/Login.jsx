@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import { api } from '../api';
 import './Login.css';
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
@@ -18,10 +16,11 @@ const Login = ({ onLogin }) => {
     }
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/auth/login`, values);
-      onLogin(res.data);
+      const res = await api.login(values.username, values.password);
+      onLogin(res);
     } catch (e) {
-      message.error(e.response?.data?.error || "Đăng nhập thất bại");
+      const msg = e.message || "Đăng nhập thất bại";
+      message.error(msg);
     } finally {
       setLoading(false);
     }
