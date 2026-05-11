@@ -89,65 +89,6 @@ body {
   color: #1e293b !important;
 }
 
-  .ant-card-body {
-    padding: 8px !important;
-  }
-
-  .ant-card-head {
-    padding: 0 8px !important;
-    min-height: 40px !important;
-  }
-
-  .ant-card-head-title {
-    font-size: 13px !important;
-  }
-
-  .ant-card-extra {
-    padding-inline: 0 !important;
-  }
-
-  /* Modal full screen */
-  .ant-modal {
-    max-width: 100% !important;
-    margin: 0 !important;
-    top: 0 !important;
-    padding-bottom: 0 !important;
-  }
-
-  .ant-modal-content {
-    border-radius: 0 !important;
-    min-height: 100vh;
-  }
-
-  .ant-modal-header {
-    border-radius: 0 !important;
-    padding: 12px 16px !important;
-  }
-
-  .ant-modal-body {
-    padding: 12px !important;
-  }
-
-  /* Table adjustments */
-  .ant-table-wrapper {
-    margin: 0 -4px;
-  }
-
-  .ant-table {
-    font-size: 11px;
-  }
-
-  .ant-table-thead > tr > th {
-    padding: 6px 8px !important;
-    font-size: 9px !important;
-  }
-
-  .ant-table-tbody > tr > td {
-    padding: 6px 8px !important;
-    font-size: 11px;
-  }
-}
-
 /* === STATISTICS STATS BAR === */
 .stat-item {
   transition: all 0.2s ease;
