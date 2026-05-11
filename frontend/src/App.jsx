@@ -254,6 +254,50 @@ const MainApp = ({ user, onLogout }) => {
 
   const uniqueClasses = [...new Set(students.map(s => s.className).filter(Boolean))].sort();
 
+  const exportBoxesToExcel = () => {
+    const headers = ['STT', 'Biển số', 'Đơn vị', 'Loại xe', 'Người mượn', 'Ngày mượn', 'Trạng thái'];
+    const dataRows = vehicles.map((v, i) => [
+      i + 1,
+      v.plate,
+      v.donVi,
+      v.type,
+      v.gvMuon || '',
+      v.ngayMuon || '',
+      v.gvMuon ? 'Đang mượn' : 'Rảnh'
+    ]);
+
+    let htmlContent = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <style>
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border: 1px solid #ddd; padding: 8px; }
+          th { background-color: #8b5cf6; color: white; font-weight: bold; text-align: center; }
+          td { font-size: 12px; }
+          tr:nth-child(even) { background-color: #f9f9f9; }
+          .center { text-align: center; }
+        </style>
+      </head>
+      <body>
+        <h2 style="text-align: center; color: #1e293b;">DANH SÁCH HỘP DAT</h2>
+        <p style="text-align: center; color: #64748b;">Xuất ngày: ${dayjs().format('DD/MM/YYYY')}</p>
+        <table>
+          <thead><tr>${headers.map(h => `<th style="text-align: center;">${h}</th>`).join('')}</tr></thead>
+          <tbody>${dataRows.map(row => `<tr>${row.map(c => `<td class="center">${c}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+        <p style="margin-top: 20px; color: #64748b; font-size: 11px;">Tổng số: ${vehicles.length} hộp</p>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `DanhSachHopDAT_${dayjs().format('DDMMYYYY')}.xls`;
+    link.click();
+  };
+
   const exportToExcel = () => {
     const headers = [
       'STT', 'Họ tên', 'Ngày sinh', 'CCCD', 'Địa chỉ', 'Lớp', 'Trạng thái Cabin',
@@ -739,13 +783,14 @@ const MainApp = ({ user, onLogout }) => {
                 variant="borderless"
                 styles={{body: {padding: '12px'}}}
                 style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px', marginBottom: '8px'}}
-                extra={
-                  <Space>
-                    <Button size="small" icon={<Clock size={14}/>} onClick={() => setShowHistory(true)}>Lịch sử</Button>
-                    <Tag color="red">An Ninh: {vehicles.filter(v => v.donVi === 'An Ninh' && v.gvMuon).length}/{vehicles.filter(v => v.donVi === 'An Ninh').length}</Tag>
-                    <Tag color="green">Hoàng Thịnh: {vehicles.filter(v => v.donVi === 'Hoàng Thịnh' && v.gvMuon).length}/{vehicles.filter(v => v.donVi === 'Hoàng Thịnh').length}</Tag>
-                  </Space>
-                }
+                  extra={
+                    <Space>
+                      <Button size="small" icon={<Download size={14}/>} onClick={exportBoxesToExcel} style={{background: '#10b981', color: 'white', border: 'none'}}>Excel</Button>
+                      <Button size="small" icon={<Clock size={14}/>} onClick={() => setShowHistory(true)}>Lịch sử</Button>
+                      <Tag color="red">An Ninh: {vehicles.filter(v => v.donVi === 'An Ninh' && v.gvMuon).length}/{vehicles.filter(v => v.donVi === 'An Ninh').length}</Tag>
+                      <Tag color="green">Hoàng Thịnh: {vehicles.filter(v => v.donVi === 'Hoàng Thịnh' && v.gvMuon).length}/{vehicles.filter(v => v.donVi === 'Hoàng Thịnh').length}</Tag>
+                    </Space>
+                  }
               >
                 <div style={{marginBottom: '8px', display: 'flex', gap: '8px'}}>
                   <Card size="small" style={{flex: 1, background: '#fef2f2', border: '1px solid #fecaca'}}>
