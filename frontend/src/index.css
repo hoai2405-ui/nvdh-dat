@@ -4,10 +4,23 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --sidebar-bg: #1e293b;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text-dark: #1e293b;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+  --bg-light: #f1f5f9;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, sans-serif;
-  background: #f1f5f9;
+  background: var(--bg-light);
 }
 
 #root {
@@ -20,7 +33,7 @@ body {
 
 /* === SIDEBAR === */
 .ant-layout-sider {
-  background: #1e293b !important;
+  background: var(--sidebar-bg) !important;
 }
 
 .ant-layout-sider .ant-layout-sider-children {
@@ -59,7 +72,7 @@ body {
 }
 
 .ant-layout-sider .ant-menu-item-selected {
-  background: #3b82f6 !important;
+  background: var(--primary) !important;
   color: #fff !important;
 }
 
@@ -70,23 +83,23 @@ body {
 /* === HEADER === */
 .ant-layout-header {
   background: #fff !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 /* === CARDS === */
 .ant-card {
   border-radius: 12px !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--border) !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
 }
 
 .ant-card-head {
-  border-bottom: 1px solid #e2e8f0 !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 .ant-card-head-title {
   font-weight: 600 !important;
-  color: #1e293b !important;
+  color: var(--text-dark) !important;
 }
 
 /* === STATISTICS STATS BAR === */
@@ -99,6 +112,12 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
   border-left-color: currentColor !important;
+}
+
+.stat-number {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
 }
 
 /* === TABLE === */
@@ -125,7 +144,7 @@ body {
 
 .ant-table-tbody > tr:hover > td {
   background: #eff6ff !important;
-  border-left: 3px solid #3b82f6 !important;
+  border-left: 3px solid var(--primary) !important;
 }
 
 .ant-table-tbody > tr:last-child > td {
@@ -134,14 +153,14 @@ body {
 
 /* === BUTTONS === */
 .ant-btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%) !important;
+  background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%) !important;
   border: none !important;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
   transition: all 0.3s ease !important;
 }
 
 .ant-btn-primary:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #4f46e5 100%) !important;
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4) !important;
 }
@@ -150,13 +169,13 @@ body {
 .ant-input, .ant-select-selector {
   border-radius: 10px !important;
   transition: all 0.3s ease !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--border) !important;
 }
 
 .ant-input:focus, .ant-input:hover,
 .ant-select-focused .ant-select-selector,
 .ant-select:hover .ant-select-selector {
-  border-color: #3b82f6 !important;
+  border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
 }
 
@@ -175,10 +194,10 @@ body {
   margin-bottom: 8px !important;
 }
 
-/* === HIGHLIGHT IMPORTANT INFO === */
+/* === HIGHLIGHT === */
 .highlight-blue {
   background: linear-gradient(90deg, #dbeafe 0%, transparent 100%);
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid var(--primary);
   padding-left: 8px;
 }
 
@@ -201,7 +220,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-light);
   border-radius: 4px;
 }
 
@@ -214,7 +233,63 @@ body {
   background: #64748b;
 }
 
-/* === RESPONSIVE MOBILE === */
+/* === MOBILE SIDEBAR OVERLAY === */
+.mobile-sidebar {
+  position: fixed !important;
+  z-index: 1001 !important;
+  top: 0 !important;
+  left: -260px !important;
+  height: 100vh !important;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.mobile-sidebar.open {
+  left: 0 !important;
+}
+
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* === SPECIALTY CLASSES === */
+.filter-select-dot {
+  min-width: 100px;
+}
+
+.user-btn {
+  transition: all 0.2s ease !important;
+}
+
+.user-btn:hover {
+  background: #f1f5f9 !important;
+}
+
+.user-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* === RESPONSIVE - TABLET & MOBILE === */
+@media (max-width: 1024px) {
+  .box-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+  }
+}
+
 @media (max-width: 768px) {
   /* Header adjustments */
   .ant-layout-header {
@@ -271,6 +346,10 @@ body {
     width: 100% !important;
   }
 
+  .filter-row .filter-select-dot {
+    width: 100% !important;
+  }
+
   .ant-card-body {
     padding: 8px !important;
   }
@@ -286,6 +365,9 @@ body {
 
   .ant-card-extra {
     padding-inline: 0 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
   }
 
   /* Box grid */
@@ -335,4 +417,33 @@ body {
     font-size: 11px;
   }
 
+  /* Box summary cards */
+  .box-summary-row {
+    flex-direction: column !important;
+  }
+
+  .box-summary-row .ant-card {
+    width: 100% !important;
+  }
+
+  /* Extra space buttons wrap */
+  .ant-card-extra .ant-space {
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .box-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+    gap: 4px !important;
+  }
+
+  .ant-layout-content {
+    padding: 2px !important;
+  }
+
+  .ant-card-body {
+    padding: 6px !important;
+  }
 }

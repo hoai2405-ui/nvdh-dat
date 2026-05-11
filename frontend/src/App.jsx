@@ -522,6 +522,7 @@ const MainApp = ({ user, onLogout }) => {
         onCollapse={setCollapsed}
         width={200}
         breakpoint="md"
+        className={isMobile ? `mobile-sidebar ${mobileMenuOpen ? 'open' : ''}` : ''}
         style={{
           background: '#1e293b',
           position: isMobile ? 'fixed' : 'sticky',
@@ -529,8 +530,7 @@ const MainApp = ({ user, onLogout }) => {
           top: 0,
           alignSelf: 'flex-start',
           height: '100vh',
-          left: isMobile ? (mobileMenuOpen ? 0 : -240) : undefined,
-          transition: isMobile ? 'left 0.3s ease' : undefined
+          transition: isMobile ? 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : undefined
         }}
         trigger={isMobile ? null : undefined}
         collapsedWidth={isMobile ? 0 : 80}
@@ -570,10 +570,7 @@ const MainApp = ({ user, onLogout }) => {
       </Sider>
 
       {isMobile && mobileMenuOpen && (
-        <div
-          style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000}}
-          onClick={() => setMobileMenuOpen(false)}
-        />
+        <div className="mobile-overlay" onClick={() => setMobileMenuOpen(false)} />
       )}
 
       <Layout>
@@ -695,7 +692,7 @@ const MainApp = ({ user, onLogout }) => {
                 <Select
                   value={selectedDot}
                   className="filter-select filter-select-dot"
-                  style={{width: '100px'}}
+                  style={{minWidth: 100}}
                   options={[
                     { label: 'Đợt 1', value: '1' },
                     { label: 'Đợt 2', value: '2' },
@@ -722,6 +719,7 @@ const MainApp = ({ user, onLogout }) => {
             <Card
               title={<div style={{display: 'flex', alignItems: 'center', gap: '6px'}}><UserCheck size={16} style={{color: '#3b82f6'}}/>Danh mục Giáo viên</div>}
               variant="borderless"
+             
               styles={{body: {padding: '12px'}}}
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
               extra={<span style={{color: '#94a3b8', fontSize: '12px'}}>{instructors.length} giáo viên</span>}
@@ -744,6 +742,7 @@ const MainApp = ({ user, onLogout }) => {
             <Card
               title={<div style={{display: 'flex', alignItems: 'center', gap: '6px'}}><CarFront size={16} style={{color: '#f97316'}}/>Danh mục Xe tập</div>}
               variant="borderless"
+             
               styles={{body: {padding: '12px'}}}
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
               extra={<span style={{color: '#94a3b8', fontSize: '12px'}}>{vehicles.length} xe</span>}
@@ -786,7 +785,7 @@ const MainApp = ({ user, onLogout }) => {
                     </Space>
                   }
               >
-                <div style={{marginBottom: '8px', display: 'flex', gap: '8px'}}>
+                <div className="box-summary-row" style={{marginBottom: '8px', display: 'flex', gap: '8px'}}>
                   <Card size="small" style={{flex: 1, background: '#fef2f2', border: '1px solid #fecaca'}}>
                     <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                       <Tag color="red">An Ninh</Tag>
@@ -853,7 +852,6 @@ const MainApp = ({ user, onLogout }) => {
                         ? '0 4px 15px rgba(245, 158, 11, 0.3)'
                         : '0 4px 15px rgba(16, 185, 129, 0.3)',
                       textAlign: 'center',
-                      transition: 'all 0.3s ease',
                       cursor: 'pointer'
                     }}>
                       {v.gvMuon && (
@@ -908,30 +906,34 @@ const MainApp = ({ user, onLogout }) => {
                           )}
                           {v.ghiChu && (
                             <div style={{
-                              marginTop: '4px',
-                              padding: '4px 8px',
-                              background: 'rgba(245, 158, 11, 0.15)',
-                              borderRadius: '4px',
+                              marginTop: '6px',
+                              padding: '6px 8px',
+                              background: 'rgba(245, 158, 11, 0.12)',
+                              borderRadius: '6px',
                               fontSize: '10px',
                               color: '#92400e',
                               fontStyle: 'italic',
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              border: '1px dashed rgba(245, 158, 11, 0.3)',
+                              lineHeight: 1.4
                             }} onClick={(e) => {
                               e.stopPropagation();
                               const note = prompt('Ghi chú:', v.ghiChu);
                               if (note !== null) api.updateVehicle(v.id, { ghiChu: note }).then(fetchData).catch(() => {});
                             }}>
-                              📎 {v.ghiChu}
+                              <span style={{opacity: 0.6}}>📎</span> {v.ghiChu}
                             </div>
                           )}
-                          <Button
-                            danger
-                            size="small"
-                            style={{marginTop: '8px'}}
-                            onClick={(e) => { e.stopPropagation(); handleReturn(v); }}
-                          >
-                            Trả hộp
-                          </Button>
+                          <div style={{borderTop: '1px solid rgba(245,158,11,0.2)', margin: '8px -12px 0', padding: '8px 12px 0'}}>
+                            <Button
+                              danger
+                              size="small"
+                              block
+                              onClick={(e) => { e.stopPropagation(); handleReturn(v); }}
+                            >
+                              Trả hộp
+                            </Button>
+                          </div>
                         </>
                       ) : (
                         <>
@@ -945,39 +947,46 @@ const MainApp = ({ user, onLogout }) => {
                           </div>
                           {v.ghiChu && (
                             <div style={{
-                              marginTop: '4px',
-                              padding: '4px 8px',
-                              background: 'rgba(245, 158, 11, 0.15)',
-                              borderRadius: '4px',
+                              marginTop: '6px',
+                              padding: '6px 8px',
+                              background: 'rgba(245, 158, 11, 0.12)',
+                              borderRadius: '6px',
                               fontSize: '10px',
                               color: '#92400e',
                               fontStyle: 'italic',
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              border: '1px dashed rgba(245, 158, 11, 0.3)',
+                              lineHeight: 1.4
                             }} onClick={(e) => {
                               e.stopPropagation();
                               const note = prompt('Ghi chú:', v.ghiChu);
                               if (note !== null) api.updateVehicle(v.id, { ghiChu: note }).then(fetchData).catch(() => {});
                             }}>
-                              📎 {v.ghiChu}
+                              <span style={{opacity: 0.6}}>📎</span> {v.ghiChu}
                             </div>
                           )}
                           {!v.ghiChu && (
-                            <Button size="small" type="link" style={{fontSize: 10, padding: 0, marginTop: 4}} onClick={(e) => {
-                              e.stopPropagation();
-                              const note = prompt('Ghi chú cho hộp này:', '');
-                              if (note) api.updateVehicle(v.id, { ghiChu: note }).then(fetchData).catch(() => {});
-                            }}>
-                              + Ghi chú
-                            </Button>
+                            <div style={{marginTop: '6px'}}>
+                              <Button size="small" type="link" style={{fontSize: 10, padding: '2px 8px', height: 'auto'}} onClick={(e) => {
+                                e.stopPropagation();
+                                const note = prompt('Ghi chú cho hộp này:', '');
+                                if (note) api.updateVehicle(v.id, { ghiChu: note }).then(fetchData).catch(() => {});
+                              }}>
+                                + Ghi chú
+                              </Button>
+                            </div>
                           )}
-                          <Button
-                            type="primary"
-                            size="small"
-                            style={{marginTop: '8px', background: '#10b981'}}
-                            onClick={(e) => { e.stopPropagation(); openBorrowModal(v); }}
-                          >
-                            Mượn
-                          </Button>
+                          <div style={{borderTop: '1px solid rgba(16,185,129,0.2)', margin: '8px -12px 0', padding: '8px 12px 0'}}>
+                            <Button
+                              type="primary"
+                              size="small"
+                              block
+                              style={{background: '#10b981'}}
+                              onClick={(e) => { e.stopPropagation(); openBorrowModal(v); }}
+                            >
+                              Mượn
+                            </Button>
+                          </div>
                         </>
                       )}
                     </div>
@@ -1046,6 +1055,7 @@ const MainApp = ({ user, onLogout }) => {
             <Card
               title={<div style={{display: 'flex', alignItems: 'center', gap: '6px'}}><Settings size={16} style={{color: '#3b82f6'}}/>Quản lý User</div>}
               variant="borderless"
+             
               styles={{body: {padding: '12px'}}}
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
               extra={<span style={{color: '#94a3b8', fontSize: '12px'}}>{users.length} user</span>}
@@ -1075,6 +1085,7 @@ const MainApp = ({ user, onLogout }) => {
             <Card
               title={<div style={{display: 'flex', alignItems: 'center', gap: '6px'}}><Settings size={16} style={{color: '#64748b'}}/>Cài đặt hiển thị menu</div>}
               variant="borderless"
+             
               styles={{body: {padding: '16px'}}}
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
             >
