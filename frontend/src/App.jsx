@@ -595,23 +595,23 @@ const MainApp = ({ user, onLogout }) => {
               {currentMenu === 'students' ? 'Học viên' : currentMenu === 'instructors' ? 'Giáo viên' : currentMenu === 'vehicles' ? 'Xe tập' : currentMenu === 'users' ? 'User' : currentMenu === 'settings' ? 'Cài đặt' : 'Hộp DAT'}
             </Title>
           </div>
-          <Space size={isMobile ? 4 : 8}>
+          <Space>
             <Dropdown menu={{ items: [
               { key: 'logout', icon: <LogOut size={14}/>, label: 'Đăng xuất', danger: true }
             ], onClick: handleMenuClick }} trigger={['click']}>
-              <Button type="text" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 12 }}>
+              <Button type="text" style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="user-btn">
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 12 }}>
                   {user.username.charAt(0).toUpperCase()}
                 </div>
-                {!isMobile && <span style={{ fontWeight: 500 }}>{user.username}</span>}
-                {!isMobile && <Tag color={isAdmin ? 'blue' : 'default'} style={{ marginLeft: 4 }}>{isAdmin ? 'Admin' : 'NV'}</Tag>}
+                <span className="user-name">{user.username}</span>
+                <Tag color={isAdmin ? 'blue' : 'default'} className="user-tag">{isAdmin ? 'Admin' : 'NV'}</Tag>
                 <ChevronDown size={14} />
               </Button>
             </Dropdown>
             {currentMenu === 'students' && (
               <>
                 <Button icon={<Download size={16} />} onClick={exportToExcel} style={{background: '#10b981', color: 'white', border: 'none'}}>
-                  {isMobile ? '' : 'Excel'}
+                  <span>Excel</span>
                 </Button>
                 <Upload customRequest={async ({file}) => {
                   try {
@@ -622,48 +622,48 @@ const MainApp = ({ user, onLogout }) => {
                     message.error("Lỗi nhập XML");
                   }
                 }} showUploadList={false}>
-                  <Button type="primary" icon={<FileUp size={16} />}>{isMobile ? '' : ' Nhập XML'}</Button>
+                  <Button type="primary" icon={<FileUp size={16} />}><span>Nhập XML</span></Button>
                 </Upload>
               </>
             )}
-            <Button icon={<RefreshCw size={16} />} onClick={fetchData}>{isMobile ? '' : 'Làm mới'}</Button>
+            <Button icon={<RefreshCw size={16} />} onClick={fetchData}><span>Làm mới</span></Button>
           </Space>
         </Header>
 
-        <Content style={{padding: isMobile ? '4px' : '8px', background: 'linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%)'}}>
+        <Content style={{padding: '8px', background: 'linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%)'}}>
           {currentMenu === 'students' && (
             <>
-              <div className="stats-row" style={{display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)', borderLeft: '4px solid #3b82f6', flex: 1, minWidth: isMobile ? '100%' : '120px'}}>
+              <div className="stats-row" style={{display: 'flex', gap: '8px', marginBottom: '8px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)', borderLeft: '4px solid #3b82f6', flex: 1, minWidth: '120px'}}>
                   <div style={{padding: '6px', borderRadius: '8px', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'white', display: 'flex'}}><Users size={14} /></div>
                   <div>
                     <div style={{fontSize: '10px', color: '#64748b', fontWeight: 500}}>Tổng học viên</div>
-                    <div style={{fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#1e293b', lineHeight: 1.2}}>{filteredStudents.length}</div>
+                    <div className="stat-number">{filteredStudents.length}</div>
                   </div>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(34, 197, 94, 0.15)', borderLeft: '4px solid #22c55e', flex: 1, minWidth: isMobile ? '100%' : '120px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(34, 197, 94, 0.15)', borderLeft: '4px solid #22c55e', flex: 1, minWidth: '120px'}}>
                   <div style={{padding: '6px', borderRadius: '8px', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', display: 'flex'}}><UserCheck size={14} /></div>
                   <div>
                     <div style={{fontSize: '10px', color: '#64748b', fontWeight: 500}}>Đã Cabin</div>
-                    <div style={{fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#16a34a', lineHeight: 1.2}}>{filteredStudents.filter(s=>s.cabinStatus==='đã học').length}</div>
+                    <div className="stat-number">{filteredStudents.filter(s=>s.cabinStatus==='đã học').length}</div>
                   </div>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(249, 115, 22, 0.15)', borderLeft: '4px solid #f97316', flex: 1, minWidth: isMobile ? '100%' : '120px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(249, 115, 22, 0.15)', borderLeft: '4px solid #f97316', flex: 1, minWidth: '120px'}}>
                   <div style={{padding: '6px', borderRadius: '8px', background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white', display: 'flex'}}><RefreshCw size={14} /></div>
                   <div>
                     <div style={{fontSize: '10px', color: '#64748b', fontWeight: 500}}>Chưa phân GV</div>
-                    <div style={{fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#ea580c', lineHeight: 1.2}}>{filteredStudents.filter(s=>!s.gvSoSan).length}</div>
+                    <div className="stat-number">{filteredStudents.filter(s=>!s.gvSoSan).length}</div>
                   </div>
                 </div>
               </div>
 
-              <div className="filter-row" style={{display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
+              <div className="filter-row" style={{display: 'flex', gap: '8px', marginBottom: '8px'}}>
                 <Input
                   placeholder="Tìm kiếm..."
                   prefix={<span style={{color: '#94a3b8'}}>🔍</span>}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  style={{flex: 1, borderRadius: '8px', border: '1px solid #e2e8f0', minWidth: isMobile ? '100%' : undefined}}
+                  style={{flex: 1, borderRadius: '8px', border: '1px solid #e2e8f0'}}
                   allowClear
                 />
                 <Select
@@ -671,7 +671,8 @@ const MainApp = ({ user, onLogout }) => {
                   value={selectedClass}
                   onChange={(val) => { setSelectedClass(val); }}
                   allowClear
-                  style={{width: isMobile ? '100%' : '160px', borderRadius: '8px'}}
+                  className="filter-select"
+                  style={{width: '160px'}}
                   options={uniqueClasses.map(c => ({label: c, value: c}))}
                 />
                 {selectedClass && (
@@ -692,15 +693,15 @@ const MainApp = ({ user, onLogout }) => {
                     cancelText="Hủy"
                     okButtonProps={{ danger: true }}
                   >
-                    <Button danger icon={<Trash2 size={16} />} size={isMobile ? 'small' : 'middle'}>
+                    <Button danger icon={<Trash2 size={16} />}>
                       Xóa
                     </Button>
                   </Popconfirm>
                 )}
                 <Select
                   value={selectedDot}
-                  onChange={(val) => { setSelectedDot(val); }}
-                  style={{width: isMobile ? '100%' : '100px', borderRadius: '8px'}}
+                  className="filter-select filter-select-dot"
+                  style={{width: '100px'}}
                   options={[
                     { label: 'Đợt 1', value: '1' },
                     { label: 'Đợt 2', value: '2' },
@@ -812,20 +813,20 @@ const MainApp = ({ user, onLogout }) => {
                   </Card>
                 </div>
 
-                <div style={{marginBottom: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap'}}>
+                <div style={{marginBottom: '8px', display: 'flex', gap: '6px'}}>
                   <Button
                     type={activeTab === 'an_ninh' ? 'primary' : 'default'}
-                    size={isMobile ? 'small' : 'middle'}
+                    size="small"
                     onClick={() => setActiveTab('an_ninh')}
-                    style={{background: activeTab === 'an_ninh' ? '#dc2626' : undefined, fontSize: isMobile ? 11 : 14}}
+                    style={{background: activeTab === 'an_ninh' ? '#dc2626' : undefined}}
                   >
                     An Ninh ({vehicles.filter(v => v.donVi === 'An Ninh').length})
                   </Button>
                   <Button
                     type={activeTab === 'hoang_thinh' ? 'primary' : 'default'}
-                    size={isMobile ? 'small' : 'middle'}
+                    size="small"
                     onClick={() => setActiveTab('hoang_thinh')}
-                    style={{background: activeTab === 'hoang_thinh' ? '#16a34a' : undefined, fontSize: isMobile ? 11 : 14}}
+                    style={{background: activeTab === 'hoang_thinh' ? '#16a34a' : undefined}}
                   >
                     Hoàng Thịnh ({vehicles.filter(v => v.donVi === 'Hoàng Thịnh').length})
                   </Button>
@@ -839,7 +840,7 @@ const MainApp = ({ user, onLogout }) => {
                   allowClear
                 />
 
-                <div style={{display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 140 : 180}px, 1fr))`, gap: '8px'}}>
+                <div className="box-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px'}}>
                   {(activeTab === 'an_ninh'
                     ? vehicles.filter(v => v.donVi === 'An Ninh')
                     : vehicles.filter(v => v.donVi === 'Hoàng Thịnh')
