@@ -289,15 +289,6 @@ body {
     gap: 4px !important;
   }
 
-  .ant-layout-header .user-btn .user-name,
-  .ant-layout-header .user-btn .user-tag {
-    display: none;
-  }
-
-  .ant-layout-header .ant-btn span:not(.anticon) {
-    display: none;
-  }
-
   .ant-layout-header .ant-btn .anticon {
     margin: 0 !important;
   }

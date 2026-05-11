@@ -573,29 +573,20 @@ const MainApp = ({ user, onLogout }) => {
         />
       )}
 
-      {isMobile && !mobileMenuOpen && (
-        <button
-          onClick={() => setMobileMenuOpen(true)}
-          style={{
-            position: 'fixed', bottom: 20, right: 20, zIndex: 999,
-            width: 50, height: 50, borderRadius: '25px', background: '#3b82f6',
-            color: 'white', border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(59,130,246,0.4)'
-          }}
-        >
-          <MenuIcon size={24} />
-        </button>
-      )}
-
       <Layout>
-        <Header style={{background: 'white', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '48px', borderBottom: '1px solid #e2e8f0', boxShadow: 'none'}}>
-          <div>
+        <Header style={{background: 'white', padding: '0 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '48px', borderBottom: '1px solid #e2e8f0', boxShadow: 'none'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+            {isMobile && (
+              <Button type="text" icon={<MenuIcon size={20}/>} onClick={() => setMobileMenuOpen(true)} />
+            )}
             <Title level={4} style={{margin:0, color: '#1e293b', fontWeight: 600, fontSize: isMobile ? 14 : 24}}>
               {currentMenu === 'students' ? 'Học viên' : currentMenu === 'instructors' ? 'Giáo viên' : currentMenu === 'vehicles' ? 'Xe tập' : currentMenu === 'users' ? 'User' : currentMenu === 'settings' ? 'Cài đặt' : 'Hộp DAT'}
             </Title>
           </div>
           <Space>
+            {isMobile ? (
+              <Button type="text" icon={<LogOut size={16}/>} onClick={() => onLogout()} />
+            ) : (
             <Dropdown menu={{ items: [
               { key: 'logout', icon: <LogOut size={14}/>, label: 'Đăng xuất', danger: true }
             ], onClick: handleMenuClick }} trigger={['click']}>
@@ -608,7 +599,8 @@ const MainApp = ({ user, onLogout }) => {
                 <ChevronDown size={14} />
               </Button>
             </Dropdown>
-            {currentMenu === 'students' && (
+            )}
+            {!isMobile && currentMenu === 'students' && (
               <>
                 <Button icon={<Download size={16} />} onClick={exportToExcel} style={{background: '#10b981', color: 'white', border: 'none'}}>
                   <span>Excel</span>
@@ -626,7 +618,7 @@ const MainApp = ({ user, onLogout }) => {
                 </Upload>
               </>
             )}
-            <Button icon={<RefreshCw size={16} />} onClick={fetchData}><span>Làm mới</span></Button>
+            <Button icon={<RefreshCw size={16} />} onClick={fetchData}>{!isMobile && <span>Làm mới</span>}</Button>
           </Space>
         </Header>
 
