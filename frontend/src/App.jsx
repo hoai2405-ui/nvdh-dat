@@ -832,10 +832,12 @@ const MainApp = ({ user, onLogout }) => {
                 />
 
                 <div className="box-grid" style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px'}}>
-                  {(activeTab === 'an_ninh'
-                    ? vehicles.filter(v => v.donVi === 'An Ninh')
-                    : vehicles.filter(v => v.donVi === 'Hoàng Thịnh')
-                  ).filter(v => !boxSearchText || v.plate.toLowerCase().includes(boxSearchText.toLowerCase())).map(v => (
+                  {(boxSearchText
+                    ? vehicles.filter(v => v.plate.toLowerCase().includes(boxSearchText.toLowerCase()))
+                    : activeTab === 'an_ninh'
+                      ? vehicles.filter(v => v.donVi === 'An Ninh')
+                      : vehicles.filter(v => v.donVi === 'Hoàng Thịnh')
+                  ).map(v => (
                     <div key={v.id} style={{
                       position: 'relative',
                       padding: '12px',
