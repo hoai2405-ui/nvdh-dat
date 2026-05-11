@@ -81,6 +81,7 @@ const MainApp = ({ user, onLogout }) => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [borrowForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState('an_ninh');
+  const [boxSearchText, setBoxSearchText] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [menuVisibility, setMenuVisibility] = useState(loadMenuVisibility);
 
@@ -784,11 +785,19 @@ const MainApp = ({ user, onLogout }) => {
                   </Button>
                 </div>
 
+                <Input
+                  placeholder="Tìm biển số hộp..."
+                  value={boxSearchText}
+                  onChange={(e) => setBoxSearchText(e.target.value)}
+                  style={{marginBottom: '8px', borderRadius: '8px', border: '1px solid #e2e8f0'}}
+                  allowClear
+                />
+
                 <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px'}}>
                   {(activeTab === 'an_ninh'
                     ? vehicles.filter(v => v.donVi === 'An Ninh')
                     : vehicles.filter(v => v.donVi === 'Hoàng Thịnh')
-                  ).map(v => (
+                  ).filter(v => !boxSearchText || v.plate.toLowerCase().includes(boxSearchText.toLowerCase())).map(v => (
                     <div key={v.id} style={{
                       position: 'relative',
                       padding: '12px',
