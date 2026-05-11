@@ -255,15 +255,13 @@ const MainApp = ({ user, onLogout }) => {
   const uniqueClasses = [...new Set(students.map(s => s.className).filter(Boolean))].sort();
 
   const exportBoxesToExcel = () => {
-    const headers = ['STT', 'Biển số', 'Đơn vị', 'Loại xe', 'Người mượn', 'Ngày mượn', 'Trạng thái'];
-    const dataRows = vehicles.map((v, i) => [
+    const headers = ['STT', 'Biển số', 'Đơn vị', 'Người mượn'];
+    const sorted = [...vehicles].sort((a, b) => a.donVi === b.donVi ? 0 : a.donVi === 'An Ninh' ? -1 : 1);
+    const dataRows = sorted.map((v, i) => [
       i + 1,
-      v.plate,
+      formatPlate(v.plate),
       v.donVi,
-      v.type,
-      v.gvMuon || '',
-      v.ngayMuon || '',
-      v.gvMuon ? 'Đang mượn' : 'Rảnh'
+      v.gvMuon || ''
     ]);
 
     let htmlContent = `
@@ -978,7 +976,7 @@ const MainApp = ({ user, onLogout }) => {
                   pagination={{ pageSize: 15, showTotal: (t) => `${t} lượt` }}
                   columns={[
                     {title: 'STT', render: (_, __, i) => i + 1, width: 50},
-                    {title: 'Biển số', dataIndex: 'plate', width: 120, render: (t) => <span style={{fontFamily: 'monospace', fontWeight: 600}}>{t}</span>},
+                    {title: 'Biển số', dataIndex: 'plate', width: 120, render: (t) => <span style={{fontFamily: 'monospace', fontWeight: 600}}>{formatPlate(t)}</span>},
                     {title: 'Đơn vị', dataIndex: 'donVi', width: 110, render: (t) => <Tag color={t === 'An Ninh' ? 'red' : 'green'}>{t}</Tag>},
                     {title: 'Giáo viên', dataIndex: 'gvMuon', width: 150},
                     {title: 'Ngày mượn', dataIndex: 'ngayMuon', width: 150},
