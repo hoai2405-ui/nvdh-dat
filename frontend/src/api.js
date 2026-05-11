@@ -77,6 +77,20 @@ export const api = {
   deleteBox: (id) =>
     IS_GOOGLE_SCRIPT ? gsPost('deleteBox', { id }) : callBackend('delete', `/boxes/${id}`),
 
+  // Box History
+  getBoxHistory: () =>
+    IS_GOOGLE_SCRIPT ? gsPost('getBoxHistory') : callBackend('get', '/box-history'),
+  addBoxHistory: (data) =>
+    IS_GOOGLE_SCRIPT ? gsPost('addBoxHistory', data) : callBackend('post', '/box-history', data),
+  clearBoxHistory: () =>
+    IS_GOOGLE_SCRIPT ? gsPost('clearBoxHistory') : callBackend('delete', '/box-history'),
+
+  // Settings
+  getSettings: (userId) =>
+    IS_GOOGLE_SCRIPT ? gsPost('getSettings', { userId }) : callBackend('get', `/settings/${userId}`),
+  updateSettings: (userId, data) =>
+    IS_GOOGLE_SCRIPT ? gsPost('updateSettings', { userId, ...data }) : callBackend('put', `/settings/${userId}`, data),
+
   // Auth / Users
   login: (username, password) =>
     IS_GOOGLE_SCRIPT ? gsPost('login', { username, password }) : callBackend('post', '/auth/login', { username, password }),

@@ -55,4 +55,28 @@ model User {
   username String @unique
   password String
   role     String @default("staff") // "admin" | "staff"
+
+  settings Setting[]
+}
+
+model BoxHistory {
+  id        Int    @id @default(autoincrement())
+  plate     String
+  donVi     String
+  gvMuon    String
+  ngayMuon  String @default("")
+  ngayTra   String @default("")
+  action    String // "mượn" | "trả"
+  createdAt String
+}
+
+model Setting {
+  id     Int    @id @default(autoincrement())
+  userId Int
+  key    String
+  value  String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
 }

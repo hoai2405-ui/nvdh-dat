@@ -16,12 +16,44 @@ const allowedOrigins = [
 ];
 
 prisma.$connect().then(async () => {
-  const count = await prisma.user.count();
-  if (count === 0) {
+  if (await prisma.user.count() === 0) {
     await prisma.user.create({
       data: { username: 'admin', password: '123456', role: 'admin' }
     });
     console.log('Created default admin user');
+  }
+
+  if (await prisma.box.count() === 0) {
+    const boxes = Array.from({ length: 12 }, (_, i) => ({
+      name: `Hộp ${i + 1}`,
+      status: 'trong'
+    }));
+    await prisma.box.createMany({ data: boxes });
+    console.log('Created 12 default boxes');
+  }
+
+  if (await prisma.instructor.count() === 0) {
+    await prisma.instructor.createMany({
+      data: [
+        { name: 'Giáo viên 1', type: 'số sàn' },
+        { name: 'Giáo viên 2', type: 'số sàn' },
+        { name: 'Giáo viên 3', type: 'tự động' },
+        { name: 'Giáo viên 4', type: 'tự động' },
+      ]
+    });
+    console.log('Created default instructors');
+  }
+
+  if (await prisma.vehicle.count() === 0) {
+    await prisma.vehicle.createMany({
+      data: [
+        { plate: '29A-12345', type: 'số sàn', donVi: 'An Ninh' },
+        { plate: '29A-67890', type: 'số sàn', donVi: 'An Ninh' },
+        { plate: '29A-11111', type: 'tự động', donVi: 'An Ninh' },
+        { plate: '29A-22222', type: 'tự động', donVi: 'An Ninh' },
+      ]
+    });
+    console.log('Created default vehicles');
   }
 });
 
@@ -151,6 +183,44 @@ app.patch('/api/boxes/:id', async (req, res) => {
 app.delete('/api/boxes/:id', async (req, res) => {
   await prisma.box.delete({ where: { id: parseInt(req.params.id) } });
   res.json({ message: 'Deleted' });
+});
+
+// --- LỊCH SỬ MƯỢN/TRẢ HỘP ---
+app.get('/api/box-history', async (req, res) => {
+  const data = await prisma.boxHistory.findMany({ orderBy: { id: 'desc' } });
+  res.json(data);
+});
+
+app.post('/api/box-history', async (req, res) => {
+  const data = await prisma.boxHistory.create({ data: req.body });
+  res.json(data);
+});
+
+app.delete('/api/box-history', async (req, res) => {
+  await prisma.boxHistory.deleteMany();
+  res.json({ message: 'Deleted' });
+});
+
+// --- CÀI ĐẶT NGƯỜI DÙNG ---
+app.get('/api/settings/:userId', async (req, res) => {
+  const data = await prisma.setting.findMany({
+    where: { userId: parseInt(req.params.userId) }
+  });
+  const obj = {};
+  data.forEach(s => { obj[s.key] = s.value === 'true' ? true : s.value === 'false' ? false : s.value; });
+  res.json(obj);
+});
+
+app.put('/api/settings/:userId', async (req, res) => {
+  const userId = parseInt(req.params.userId);
+  const entries = req.body;
+  await prisma.setting.deleteMany({ where: { userId } });
+  if (entries && typeof entries === 'object') {
+    for (const [key, value] of Object.entries(entries)) {
+      await prisma.setting.create({ data: { userId, key, value: String(value) } });
+    }
+  }
+  res.json({ message: 'Saved' });
 });
 
 // --- NHẬP XML ---

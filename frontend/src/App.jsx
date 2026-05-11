@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Layout, Menu, Table, Button, Upload, Select, Tag, Space, Card, Input, Form, Typography, ConfigProvider, App as AntdApp, message, DatePicker, TimePicker, Popconfirm, Modal, Dropdown } from 'antd';
-import { Users, CarFront, UserCheck, FileUp, RefreshCw, Trash2, Plus, Database, Package, Download, Check, X, LogOut, Settings, ChevronDown, Menu as MenuIcon } from 'lucide-react';
+import { Users, CarFront, UserCheck, FileUp, RefreshCw, Trash2, Plus, Database, Package, Download, Check, X, LogOut, Settings, ChevronDown, Menu as MenuIcon, Clock } from 'lucide-react';
 import dayjs from 'dayjs';
 import { api } from './api';
 import Login from './components/Login';
@@ -24,11 +24,42 @@ const formatPlate = (plate) => {
   return plate;
 };
 
+const HISTORY_STORAGE_KEY = 'nvdh_box_history';
+const MENU_VISIBILITY_KEY = 'nvdh_menu_visibility';
+
+const DEFAULT_MENU_VISIBILITY = { students: false, boxes: true, instructors: true, vehicles: true, users: true };
+
+const loadMenuVisibility = () => {
+  try {
+    const saved = localStorage.getItem(MENU_VISIBILITY_KEY);
+    if (saved) return { ...DEFAULT_MENU_VISIBILITY, ...JSON.parse(saved), students: DEFAULT_MENU_VISIBILITY.students };
+  } catch {}
+  return { ...DEFAULT_MENU_VISIBILITY };
+};
+
+const DEFAULT_VEHICLES = [
+  ...['51F90905','80A00074','80A00159','80A00156','80A00110','51F91212','51F90815','80A00057','80A00132','51F90852','80A00111','80A00117','80A00183','80A00155','80A00126','80A00139','80A00160','51F29832','51F29795','51F29550','51F29211','51F29072','51F29340','51F29790','51F29817','51F29887','51F29945','51F29765','51F29723','51F29819','51F29839','51F29859','51F29341','51F29400','51F29294','51F29827','80A00171','80A00150','80A00163','80A00102','80A00149','80A00185','80A00133','51F29418','51F29427','51F29190','51F29332'].map((p, i) => ({
+    id: `an_${i}_${p}`, plate: p, donVi: 'An Ninh', type: 'Số sàn', gvMuon: '', ngayMuon: '', status: 'ranh'
+  })),
+  ...['51G01358','51G00298','51G00779','51G01390','51G01410','51G00885','51G00839','51G00907','51G01382','51G01081','51G01579','51G01577','51G01461','51G01481','51G01601','51G01662','51G01660','51G01311','51G01733','51G00233','51G01792','51G01557','51G01558','51G01740','51G01838','51G01911','51G01876','51G01331','51G01881','51G01926','51F29834','51F29297','51F29138','51F29384','51F29442','51F29720','51F29731','51F29200','51F29744','51K60460','51K60299','51K60309','51K60053','51K60331','51K60136','51K60195','51K60015','51K60495','51K60091','51K60361','51K60358','51K60119','51K60425','51K60100','51K60124','51K60169','51K60269','51K60320','51F60337'].map((p, i) => ({
+    id: `ht_${i}_${p}`, plate: p, donVi: 'Hoàng Thịnh', type: 'Số sàn', gvMuon: '', ngayMuon: '', status: 'ranh'
+  }))
+];
+
+const loadHistory = () => {
+  try {
+    const saved = localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return [];
+};
+
 const MainApp = ({ user, onLogout }) => {
-  const [currentMenu, setCurrentMenu] = useState('students');
+  const [currentMenu, setCurrentMenu] = useState('boxes');
   const [students, setStudents] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const [boxHistory, setBoxHistory] = useState([]);
   const [boxes, setBoxes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -50,6 +81,24 @@ const MainApp = ({ user, onLogout }) => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [borrowForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState('an_ninh');
+  const [showHistory, setShowHistory] = useState(false);
+  const [menuVisibility, setMenuVisibility] = useState(loadMenuVisibility);
+
+  const saveMenuVisibility = (v) => {
+    setMenuVisibility(v);
+    localStorage.setItem(MENU_VISIBILITY_KEY, JSON.stringify(v));
+    if (user?.id) api.updateSettings(user.id, v).catch(() => {});
+  };
+
+  useEffect(() => {
+    if (!user?.id) return;
+    api.getSettings(user.id).then(settings => {
+      if (settings && Object.keys(settings).length > 0) {
+        setMenuVisibility(prev => ({ ...DEFAULT_MENU_VISIBILITY, ...settings, students: DEFAULT_MENU_VISIBILITY.students }));
+        localStorage.setItem(MENU_VISIBILITY_KEY, JSON.stringify(settings));
+      }
+    }).catch(() => {});
+  }, [user]);
 
   const isAdmin = user?.role === 'admin';
 
@@ -65,22 +114,51 @@ const MainApp = ({ user, onLogout }) => {
     const ngayMuonStr = values.ngayMuon ? values.ngayMuon.format('DD/MM/YYYY HH:mm') : '';
     try {
       await api.updateVehicle(selectedVehicle.id, { gvMuon: values.gvMuon || '', ngayMuon: ngayMuonStr, status: 'dang_muon' });
-      message.success('Cập nhật thành công');
+      const entry = {
+        id: Date.now().toString(),
+        plate: selectedVehicle.plate,
+        donVi: selectedVehicle.donVi,
+        gvMuon: values.gvMuon || '',
+        ngayMuon: ngayMuonStr,
+        ngayTra: '',
+        action: 'mượn',
+        createdAt: dayjs().format('DD/MM/YYYY HH:mm:ss')
+      };
+      saveHistory([entry, ...boxHistory]);
+      await api.addBoxHistory(entry).catch(() => {});
+      message.success('Đã cho mượn hộp');
       setSelectedVehicle(null);
       fetchData();
     } catch (e) {
-      message.error('Lỗi cập nhật');
+      message.error('Lỗi cho mượn hộp');
     }
   };
 
   const handleReturn = async (vehicle) => {
     try {
       await api.updateVehicle(vehicle.id, { gvMuon: '', ngayMuon: '', status: 'ranh' });
+      const entry = {
+        id: Date.now().toString(),
+        plate: vehicle.plate,
+        donVi: vehicle.donVi,
+        gvMuon: vehicle.gvMuon,
+        ngayMuon: vehicle.ngayMuon,
+        ngayTra: dayjs().format('DD/MM/YYYY HH:mm'),
+        action: 'trả',
+        createdAt: dayjs().format('DD/MM/YYYY HH:mm:ss')
+      };
+      saveHistory([entry, ...boxHistory]);
+      await api.addBoxHistory(entry).catch(() => {});
       message.success('Đã trả hộp');
       fetchData();
     } catch (e) {
       message.error('Lỗi trả hộp');
     }
+  };
+
+  const saveHistory = (newHistory) => {
+    setBoxHistory(newHistory);
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(newHistory));
   };
 
   const fetchData = async () => {
@@ -92,9 +170,22 @@ const MainApp = ({ user, onLogout }) => {
         api.getVehicles(),
         api.getBoxes()
       ]);
+      if (v && v.length > 0) {
+        setVehicles(v);
+      } else {
+        const batchSize = 10;
+        for (let i = 0; i < DEFAULT_VEHICLES.length; i += batchSize) {
+          const batch = DEFAULT_VEHICLES.slice(i, i + batchSize);
+          await Promise.all(batch.map(dv => {
+            const { id, ...rest } = dv;
+            return api.addVehicle(rest);
+          }));
+        }
+        const seeded = await api.getVehicles();
+        setVehicles(seeded || []);
+      }
       setStudents(s || []);
       setInstructors(i || []);
-      setVehicles(v || []);
       setBoxes(b || []);
     } catch (e) {
       console.error(e);
@@ -120,6 +211,21 @@ const MainApp = ({ user, onLogout }) => {
       fetchUsers();
     }
   }, [currentMenu, isAdmin]);
+
+  useEffect(() => {
+    api.getBoxHistory().then(history => {
+      if (history && history.length > 0) {
+        setBoxHistory(history);
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+      } else {
+        const local = loadHistory();
+        if (local.length > 0) setBoxHistory(local);
+      }
+    }).catch(() => {
+      const local = loadHistory();
+      if (local.length > 0) setBoxHistory(local);
+    });
+  }, []);
 
   const addUser = async (values) => {
     await api.addUser(values);
@@ -364,30 +470,32 @@ const MainApp = ({ user, onLogout }) => {
 ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout>
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
-        width={240}
+        width={200}
         breakpoint="md"
         style={{
           background: '#1e293b',
-          position: isMobile ? 'fixed' : 'relative',
+          position: isMobile ? 'fixed' : 'sticky',
           zIndex: isMobile ? 1001 : 1,
-          height: isMobile ? '100vh' : '100%',
+          top: 0,
+          alignSelf: 'flex-start',
+          height: '100vh',
           left: isMobile ? (mobileMenuOpen ? 0 : -240) : undefined,
           transition: isMobile ? 'left 0.3s ease' : undefined
         }}
         trigger={isMobile ? null : undefined}
         collapsedWidth={isMobile ? 0 : 80}
       >
-        <div style={{padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
-          <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-            <div style={{padding: '8px', borderRadius: '8px', background: '#3b82f6'}}>
-              <CarFront size={20} color="white" />
+        <div style={{padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <div style={{padding: '5px', borderRadius: '6px', background: '#3b82f6', display: 'flex'}}>
+              <CarFront size={16} color="white" />
             </div>
-            {!collapsed && <span style={{fontWeight: 700, fontSize: '16px', color: 'white'}}>Tiện ích NVDH</span>}
+            {!collapsed && <span style={{fontWeight: 700, fontSize: '13px', color: 'white'}}>Tiện ích NVDH</span>}
           </div>
           {isMobile && (
             <X size={20} color="white" style={{cursor: 'pointer'}} onClick={() => setMobileMenuOpen(false)} />
@@ -402,12 +510,13 @@ const MainApp = ({ user, onLogout }) => {
             if (isMobile) setMobileMenuOpen(false);
           }}
           items={[
-            { key: 'students', icon: <Users size={18}/>, label: 'Quản lý Học viên' },
+            ...(menuVisibility.students ? [{ key: 'students', icon: <Users size={16}/>, label: 'Quản lý Học viên' }] : []),
             ...(isAdmin ? [
-              { key: 'boxes', icon: <Package size={18}/>, label: 'Hộp DAT' },
-              { key: 'instructors', icon: <UserCheck size={18}/>, label: 'Danh mục Giáo viên' },
-              { key: 'vehicles', icon: <CarFront size={18}/>, label: 'Danh mục Xe tập' },
-              { key: 'users', icon: <Settings size={18}/>, label: 'Quản lý User' },
+              ...(menuVisibility.boxes ? [{ key: 'boxes', icon: <Package size={16}/>, label: 'Hộp DAT' }] : []),
+              ...(menuVisibility.instructors ? [{ key: 'instructors', icon: <UserCheck size={16}/>, label: 'Danh mục Giáo viên' }] : []),
+              ...(menuVisibility.vehicles ? [{ key: 'vehicles', icon: <CarFront size={16}/>, label: 'Danh mục Xe tập' }] : []),
+              ...(menuVisibility.users ? [{ key: 'users', icon: <Settings size={16}/>, label: 'Quản lý User' }] : []),
+              { key: 'settings', icon: <Settings size={16}/>, label: 'Cài đặt' },
             ] : [])
           ]}
           style={{background: 'transparent', border: 'none'}}
@@ -437,10 +546,10 @@ const MainApp = ({ user, onLogout }) => {
       )}
 
       <Layout>
-        <Header style={{background: 'white', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '64px', borderBottom: '1px solid #e2e8f0', boxShadow: 'none'}}>
+        <Header style={{background: 'white', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '48px', borderBottom: '1px solid #e2e8f0', boxShadow: 'none'}}>
           <div>
             <Title level={4} style={{margin:0, color: '#1e293b', fontWeight: 600}}>
-              {currentMenu === 'students' ? 'Hồ sơ học viên' : currentMenu === 'instructors' ? 'Danh mục Giáo viên' : currentMenu === 'vehicles' ? 'Danh mục Xe tập' : currentMenu === 'users' ? 'Quản lý User' : 'Hộp DAT'}
+              {currentMenu === 'students' ? 'Hồ sơ học viên' : currentMenu === 'instructors' ? 'Danh mục Giáo viên' : currentMenu === 'vehicles' ? 'Danh mục Xe tập' : currentMenu === 'users' ? 'Quản lý User' : currentMenu === 'settings' ? 'Cài đặt' : 'Hộp DAT'}
             </Title>
           </div>
           <Space>
@@ -478,40 +587,40 @@ const MainApp = ({ user, onLogout }) => {
           </Space>
         </Header>
 
-        <Content style={{padding: '16px', background: 'linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%)'}}>
+        <Content style={{padding: '8px', background: 'linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%)'}}>
           {currentMenu === 'students' && (
             <>
-              <div className="stats-row" style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.15)', borderLeft: '4px solid #3b82f6', flex: 1, minWidth: '140px'}}>
-                  <div style={{padding: '8px', borderRadius: '10px', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'white'}}><Users size={16} /></div>
+              <div className="stats-row" style={{display: 'flex', gap: '8px', marginBottom: '8px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)', borderLeft: '4px solid #3b82f6', flex: 1, minWidth: '120px'}}>
+                  <div style={{padding: '6px', borderRadius: '8px', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'white', display: 'flex'}}><Users size={14} /></div>
                   <div>
-                    <div style={{fontSize: '11px', color: '#64748b', fontWeight: 500}}>Tổng học viên</div>
-                    <div style={{fontSize: '22px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2}}>{filteredStudents.length}</div>
+                    <div style={{fontSize: '10px', color: '#64748b', fontWeight: 500}}>Tổng học viên</div>
+                    <div style={{fontSize: '18px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2}}>{filteredStudents.length}</div>
                   </div>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(34, 197, 94, 0.15)', borderLeft: '4px solid #22c55e', flex: 1, minWidth: '140px'}}>
-                  <div style={{padding: '8px', borderRadius: '10px', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white'}}><UserCheck size={16} /></div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(34, 197, 94, 0.15)', borderLeft: '4px solid #22c55e', flex: 1, minWidth: '120px'}}>
+                  <div style={{padding: '6px', borderRadius: '8px', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', display: 'flex'}}><UserCheck size={14} /></div>
                   <div>
-                    <div style={{fontSize: '11px', color: '#64748b', fontWeight: 500}}>Đã Cabin</div>
-                    <div style={{fontSize: '22px', fontWeight: 700, color: '#16a34a', lineHeight: 1.2}}>{filteredStudents.filter(s=>s.cabinStatus==='đã học').length}</div>
+                    <div style={{fontSize: '10px', color: '#64748b', fontWeight: 500}}>Đã Cabin</div>
+                    <div style={{fontSize: '18px', fontWeight: 700, color: '#16a34a', lineHeight: 1.2}}>{filteredStudents.filter(s=>s.cabinStatus==='đã học').length}</div>
                   </div>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '10px', background: 'white', padding: '12px 16px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(249, 115, 22, 0.15)', borderLeft: '4px solid #f97316', flex: 1, minWidth: '140px'}}>
-                  <div style={{padding: '8px', borderRadius: '10px', background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white'}}><RefreshCw size={16} /></div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(249, 115, 22, 0.15)', borderLeft: '4px solid #f97316', flex: 1, minWidth: '120px'}}>
+                  <div style={{padding: '6px', borderRadius: '8px', background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white', display: 'flex'}}><RefreshCw size={14} /></div>
                   <div>
-                    <div style={{fontSize: '11px', color: '#64748b', fontWeight: 500}}>Chưa phân GV</div>
-                    <div style={{fontSize: '22px', fontWeight: 700, color: '#ea580c', lineHeight: 1.2}}>{filteredStudents.filter(s=>!s.gvSoSan).length}</div>
+                    <div style={{fontSize: '10px', color: '#64748b', fontWeight: 500}}>Chưa phân GV</div>
+                    <div style={{fontSize: '18px', fontWeight: 700, color: '#ea580c', lineHeight: 1.2}}>{filteredStudents.filter(s=>!s.gvSoSan).length}</div>
                   </div>
                 </div>
               </div>
 
-              <div className="filter-row" style={{display: 'flex', gap: '12px', marginBottom: '12px'}}>
+              <div className="filter-row" style={{display: 'flex', gap: '8px', marginBottom: '8px'}}>
                 <Input
                   placeholder="Tìm kiếm theo tên hoặc CCCD..."
                   prefix={<span style={{color: '#94a3b8'}}>🔍</span>}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  style={{flex: 1, borderRadius: '10px', border: '2px solid #e2e8f0'}}
+                  style={{flex: 1, borderRadius: '8px', border: '1px solid #e2e8f0'}}
                   allowClear
                 />
                 <Select
@@ -519,7 +628,7 @@ const MainApp = ({ user, onLogout }) => {
                   value={selectedClass}
                   onChange={(val) => { setSelectedClass(val); }}
                   allowClear
-                  style={{width: '200px', borderRadius: '10px'}}
+                  style={{width: '180px', borderRadius: '8px'}}
                   options={uniqueClasses.map(c => ({label: c, value: c}))}
                 />
                 {selectedClass && (
@@ -548,7 +657,7 @@ const MainApp = ({ user, onLogout }) => {
                 <Select
                   value={selectedDot}
                   onChange={(val) => { setSelectedDot(val); }}
-                  style={{width: '130px', borderRadius: '10px'}}
+                  style={{width: '110px', borderRadius: '8px'}}
                   options={[
                     { label: 'Đợt 1', value: '1' },
                     { label: 'Đợt 2', value: '2' },
@@ -557,7 +666,7 @@ const MainApp = ({ user, onLogout }) => {
                 />
               </div>
 
-              <Card variant="borderless" style={{boxShadow: '0 4px 12px rgba(0,0,0,0.08)', borderRadius: '12px', border: '1px solid #e2e8f0'}}>
+              <Card variant="borderless" styles={{body: {padding: 0}}} style={{boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderRadius: '10px', border: '1px solid #e2e8f0'}}>
                 <Table
                   dataSource={filteredStudents}
                   columns={studentColumns}
@@ -572,12 +681,13 @@ const MainApp = ({ user, onLogout }) => {
 
           {currentMenu === 'instructors' && (
             <Card
-              title={<div style={{display: 'flex', alignItems: 'center', gap: '8px'}}><UserCheck size={18} style={{color: '#3b82f6'}}/>Danh mục Giáo viên</div>}
+              title={<div style={{display: 'flex', alignItems: 'center', gap: '6px'}}><UserCheck size={16} style={{color: '#3b82f6'}}/>Danh mục Giáo viên</div>}
               variant="borderless"
+              styles={{body: {padding: '12px'}}}
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
-              extra={<span style={{color: '#94a3b8', fontSize: '13px'}}>{instructors.length} giáo viên</span>}
+              extra={<span style={{color: '#94a3b8', fontSize: '12px'}}>{instructors.length} giáo viên</span>}
             >
-              <Form layout="inline" style={{marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await api.addInstructor(v); fetchData(); message.success('Thêm giáo viên thành công');}}>
+              <Form layout="inline" style={{marginBottom: '12px', padding: '8px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await api.addInstructor(v); fetchData(); message.success('Thêm giáo viên thành công');}}>
                 <Form.Item name="name" required style={{flex: 1, marginBottom: 0}}><Input placeholder="Tên giáo viên" /></Form.Item>
                 <Form.Item name="type" initialValue="Số sàn" style={{marginBottom: 0, minWidth: '130px'}}><Select options={[{value:'Số sàn'}, {value:'Tự động'}]}/></Form.Item>
                 <Button type="primary" htmlType="submit" icon={<Plus size={16}/>}>Thêm</Button>
@@ -593,12 +703,17 @@ const MainApp = ({ user, onLogout }) => {
 
           {currentMenu === 'vehicles' && (
             <Card
-              title={<div style={{display: 'flex', alignItems: 'center', gap: '8px'}}><CarFront size={18} style={{color: '#f97316'}}/>Danh mục Xe tập</div>}
+              title={<div style={{display: 'flex', alignItems: 'center', gap: '6px'}}><CarFront size={16} style={{color: '#f97316'}}/>Danh mục Xe tập</div>}
               variant="borderless"
+              styles={{body: {padding: '12px'}}}
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
-              extra={<span style={{color: '#94a3b8', fontSize: '13px'}}>{vehicles.length} xe</span>}
+              extra={<span style={{color: '#94a3b8', fontSize: '12px'}}>{vehicles.length} xe</span>}
             >
-              <Form layout="inline" style={{marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await api.addVehicle(v); fetchData(); message.success('Thêm xe thành công');}}>
+              <Form layout="inline" style={{marginBottom: '12px', padding: '8px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v) => {
+                await api.addVehicle(v);
+                message.success('Thêm xe thành công');
+                fetchData();
+              }}>
                 <Form.Item name="plate" required style={{flex: 1, marginBottom: 0}}><Input placeholder="Biển số xe" /></Form.Item>
                 <Form.Item name="type" initialValue="Số sàn" style={{marginBottom: 0, minWidth: '130px'}}><Select options={[{value:'Số sàn'}, {value:'Tự động'}]}/></Form.Item>
                 <Form.Item name="donVi" initialValue="An Ninh" style={{marginBottom: 0, minWidth: '130px'}}>
@@ -611,7 +726,7 @@ const MainApp = ({ user, onLogout }) => {
                 {title: 'Biển số', dataIndex: 'plate', render: (t) => <span style={{fontFamily: 'monospace', fontWeight: 600, background: '#f1f5f9', padding: '4px 10px', borderRadius: '6px'}}>{t}</span>},
                 {title: 'Loại xe', dataIndex: 'type', render: (t) => <Tag color={t === 'Số sàn' ? 'orange' : 'purple'}>{t}</Tag>},
                 {title: 'Đơn vị', dataIndex: 'donVi', render: (t) => <Tag color={t === 'An Ninh' ? 'red' : 'green'}>{t}</Tag>},
-                {title: '', render: (r) => <Button danger type="text" icon={<Trash2 size={16}/>} onClick={async()=>{await api.deleteVehicle(r.id); fetchData(); message.success('Đã xóa');}} />}
+                {title: '', render: (r) => <Button danger type="text" icon={<Trash2 size={16}/>} onClick={async () => { await api.deleteVehicle(r.id); fetchData(); message.success('Đã xóa'); }} />}
               ]} />
             </Card>
           )}
@@ -619,17 +734,19 @@ const MainApp = ({ user, onLogout }) => {
           {currentMenu === 'boxes' && (
             <>
               <Card
-                title={<div style={{display: 'flex', alignItems: 'center', gap: '8px'}}><Package size={18} style={{color: '#8b5cf6'}}/>Hộp DAT</div>}
+                title={<div style={{display: 'flex', alignItems: 'center', gap: '6px'}}><Package size={16} style={{color: '#8b5cf6'}}/>Hộp DAT</div>}
                 variant="borderless"
-                style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px', marginBottom: '16px'}}
+                styles={{body: {padding: '12px'}}}
+                style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px', marginBottom: '8px'}}
                 extra={
                   <Space>
+                    <Button size="small" icon={<Clock size={14}/>} onClick={() => setShowHistory(true)}>Lịch sử</Button>
                     <Tag color="red">An Ninh: {vehicles.filter(v => v.donVi === 'An Ninh' && v.gvMuon).length}/{vehicles.filter(v => v.donVi === 'An Ninh').length}</Tag>
                     <Tag color="green">Hoàng Thịnh: {vehicles.filter(v => v.donVi === 'Hoàng Thịnh' && v.gvMuon).length}/{vehicles.filter(v => v.donVi === 'Hoàng Thịnh').length}</Tag>
                   </Space>
                 }
               >
-                <div style={{marginBottom: '16px', display: 'flex', gap: '12px'}}>
+                <div style={{marginBottom: '8px', display: 'flex', gap: '8px'}}>
                   <Card size="small" style={{flex: 1, background: '#fef2f2', border: '1px solid #fecaca'}}>
                     <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                       <Tag color="red">An Ninh</Tag>
@@ -650,7 +767,7 @@ const MainApp = ({ user, onLogout }) => {
                   </Card>
                 </div>
 
-                <div style={{marginBottom: '12px', display: 'flex', gap: '8px'}}>
+                <div style={{marginBottom: '8px', display: 'flex', gap: '6px'}}>
                   <Button
                     type={activeTab === 'an_ninh' ? 'primary' : 'default'}
                     onClick={() => setActiveTab('an_ninh')}
@@ -667,14 +784,14 @@ const MainApp = ({ user, onLogout }) => {
                   </Button>
                 </div>
 
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px'}}>
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px'}}>
                   {(activeTab === 'an_ninh'
                     ? vehicles.filter(v => v.donVi === 'An Ninh')
                     : vehicles.filter(v => v.donVi === 'Hoàng Thịnh')
                   ).map(v => (
                     <div key={v.id} style={{
                       position: 'relative',
-                      padding: '16px',
+                      padding: '12px',
                       background: v.gvMuon
                         ? 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)'
                         : 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
@@ -792,17 +909,43 @@ const MainApp = ({ user, onLogout }) => {
                   </Form.Item>
                 </Form>
               </Modal>
+
+              <Modal
+                title="Lịch sử mượn/trả hộp"
+                open={showHistory}
+                onCancel={() => setShowHistory(false)}
+                footer={<Button danger onClick={() => { saveHistory([]); api.clearBoxHistory().catch(() => {}); message.success('Đã xóa lịch sử'); }}>Xóa lịch sử</Button>}
+                width={900}
+              >
+                <Table
+                  dataSource={boxHistory}
+                  rowKey="id"
+                  size="small"
+                  pagination={{ pageSize: 15, showTotal: (t) => `${t} lượt` }}
+                  columns={[
+                    {title: 'STT', render: (_, __, i) => i + 1, width: 50},
+                    {title: 'Biển số', dataIndex: 'plate', width: 120, render: (t) => <span style={{fontFamily: 'monospace', fontWeight: 600}}>{t}</span>},
+                    {title: 'Đơn vị', dataIndex: 'donVi', width: 110, render: (t) => <Tag color={t === 'An Ninh' ? 'red' : 'green'}>{t}</Tag>},
+                    {title: 'Giáo viên', dataIndex: 'gvMuon', width: 150},
+                    {title: 'Ngày mượn', dataIndex: 'ngayMuon', width: 150},
+                    {title: 'Ngày trả', dataIndex: 'ngayTra', width: 150, render: (t) => t || '-'},
+                    {title: 'Hành động', dataIndex: 'action', width: 90, render: (t) => <Tag color={t === 'mượn' ? 'orange' : 'green'}>{t === 'mượn' ? 'Mượn' : 'Trả'}</Tag>},
+                    {title: 'Ghi nhận', dataIndex: 'createdAt', width: 150},
+                  ]}
+                />
+              </Modal>
             </>
           )}
 
           {currentMenu === 'users' && isAdmin && (
             <Card
-              title={<div style={{display: 'flex', alignItems: 'center', gap: '8px'}}><Settings size={18} style={{color: '#3b82f6'}}/>Quản lý User</div>}
+              title={<div style={{display: 'flex', alignItems: 'center', gap: '6px'}}><Settings size={16} style={{color: '#3b82f6'}}/>Quản lý User</div>}
               variant="borderless"
+              styles={{body: {padding: '12px'}}}
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
-              extra={<span style={{color: '#94a3b8', fontSize: '13px'}}>{users.length} user</span>}
+              extra={<span style={{color: '#94a3b8', fontSize: '12px'}}>{users.length} user</span>}
             >
-              <Form layout="inline" style={{marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px'}} onFinish={addUser}>
+              <Form layout="inline" style={{marginBottom: '12px', padding: '8px', background: '#f8fafc', borderRadius: '8px'}} onFinish={addUser}>
                 <Form.Item name="username" required style={{flex: 1, marginBottom: 0}}><Input placeholder="Tài khoản" /></Form.Item>
                 <Form.Item name="password" required style={{flex: 1, marginBottom: 0, minWidth: '150px'}}><Input.Password placeholder="Mật khẩu" /></Form.Item>
                 <Form.Item name="role" initialValue="staff" style={{marginBottom: 0, minWidth: '130px'}}>
@@ -820,6 +963,37 @@ const MainApp = ({ user, onLogout }) => {
                   </Popconfirm>
                 )}
               ]} />
+            </Card>
+          )}
+
+          {currentMenu === 'settings' && isAdmin && (
+            <Card
+              title={<div style={{display: 'flex', alignItems: 'center', gap: '6px'}}><Settings size={16} style={{color: '#64748b'}}/>Cài đặt hiển thị menu</div>}
+              variant="borderless"
+              styles={{body: {padding: '16px'}}}
+              style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
+            >
+              <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                {[
+                  { key: 'students', label: 'Quản lý Học viên' },
+                  { key: 'boxes', label: 'Hộp DAT' },
+                  { key: 'instructors', label: 'Danh mục Giáo viên' },
+                  { key: 'vehicles', label: 'Danh mục Xe tập' },
+                  { key: 'users', label: 'Quản lý User' },
+                ].map(item => (
+                  <div key={item.key} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8fafc', borderRadius: '8px'}}>
+                    <span style={{fontWeight: 500, color: '#1e293b'}}>{item.label}</span>
+                    <Button
+                      type={menuVisibility[item.key] ? 'primary' : 'default'}
+                      danger={!menuVisibility[item.key]}
+                      onClick={() => saveMenuVisibility({ ...menuVisibility, [item.key]: !menuVisibility[item.key] })}
+                      style={{minWidth: 80}}
+                    >
+                      {menuVisibility[item.key] ? 'Hiện' : 'Ẩn'}
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </Card>
           )}
         </Content>
