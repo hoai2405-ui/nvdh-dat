@@ -595,7 +595,6 @@ const MainApp = ({ user, onLogout }) => {
                   {user.username.charAt(0).toUpperCase()}
                 </div>
                 <span className="user-name">{user.username}</span>
-                <Tag color={isAdmin ? 'blue' : 'default'} className="user-tag">{isAdmin ? 'Admin' : 'NV'}</Tag>
                 <ChevronDown size={14} />
               </Button>
             </Dropdown>
