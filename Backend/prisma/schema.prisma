@@ -37,6 +37,7 @@ model Vehicle {
   donVi    String @default("An Ninh")
   gvMuon   String @default("")
   ngayMuon String @default("")
+  ghiChu   String @default("")
   status   String @default("ranh")
 }
 
@@ -66,6 +67,7 @@ model BoxHistory {
   gvMuon    String
   ngayMuon  String @default("")
   ngayTra   String @default("")
+  ghiChu    String @default("")
   action    String // "mượn" | "trả"
   createdAt String
 }

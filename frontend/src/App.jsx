@@ -39,10 +39,10 @@ const loadMenuVisibility = () => {
 
 const DEFAULT_VEHICLES = [
   ...['51F90905','80A00074','80A00159','80A00156','80A00110','51F91212','51F90815','80A00057','80A00132','51F90852','80A00111','80A00117','80A00183','80A00155','80A00126','80A00139','80A00160','51F29832','51F29795','51F29550','51F29211','51F29072','51F29340','51F29790','51F29817','51F29887','51F29945','51F29765','51F29723','51F29819','51F29839','51F29859','51F29341','51F29400','51F29294','51F29827','80A00171','80A00150','80A00163','80A00102','80A00149','80A00185','80A00133','51F29418','51F29427','51F29190','51F29332'].map((p, i) => ({
-    id: `an_${i}_${p}`, plate: p, donVi: 'An Ninh', type: 'Số sàn', gvMuon: '', ngayMuon: '', status: 'ranh'
+    id: `an_${i}_${p}`, plate: p, donVi: 'An Ninh', type: 'Số sàn', gvMuon: '', ngayMuon: '', ghiChu: '', status: 'ranh'
   })),
   ...['51G01358','51G00298','51G00779','51G01390','51G01410','51G00885','51G00839','51G00907','51G01382','51G01081','51G01579','51G01577','51G01461','51G01481','51G01601','51G01662','51G01660','51G01311','51G01733','51G00233','51G01792','51G01557','51G01558','51G01740','51G01838','51G01911','51G01876','51G01331','51G01881','51G01926','51F29834','51F29297','51F29138','51F29384','51F29442','51F29720','51F29731','51F29200','51F29744','51K60460','51K60299','51K60309','51K60053','51K60331','51K60136','51K60195','51K60015','51K60495','51K60091','51K60361','51K60358','51K60119','51K60425','51K60100','51K60124','51K60169','51K60269','51K60320','51F60337'].map((p, i) => ({
-    id: `ht_${i}_${p}`, plate: p, donVi: 'Hoàng Thịnh', type: 'Số sàn', gvMuon: '', ngayMuon: '', status: 'ranh'
+    id: `ht_${i}_${p}`, plate: p, donVi: 'Hoàng Thịnh', type: 'Số sàn', gvMuon: '', ngayMuon: '', ghiChu: '', status: 'ranh'
   }))
 ];
 
@@ -114,13 +114,14 @@ const MainApp = ({ user, onLogout }) => {
   const handleBorrowSubmit = async (values) => {
     const ngayMuonStr = values.ngayMuon ? values.ngayMuon.format('DD/MM/YYYY HH:mm') : '';
     try {
-      await api.updateVehicle(selectedVehicle.id, { gvMuon: values.gvMuon || '', ngayMuon: ngayMuonStr, status: 'dang_muon' });
+      await api.updateVehicle(selectedVehicle.id, { gvMuon: values.gvMuon || '', ngayMuon: ngayMuonStr, ghiChu: values.ghiChu || '', status: 'dang_muon' });
       const entry = {
         id: Date.now().toString(),
         plate: selectedVehicle.plate,
         donVi: selectedVehicle.donVi,
         gvMuon: values.gvMuon || '',
         ngayMuon: ngayMuonStr,
+        ghiChu: values.ghiChu || '',
         ngayTra: '',
         action: 'mượn',
         createdAt: dayjs().format('DD/MM/YYYY HH:mm:ss')
@@ -137,13 +138,14 @@ const MainApp = ({ user, onLogout }) => {
 
   const handleReturn = async (vehicle) => {
     try {
-      await api.updateVehicle(vehicle.id, { gvMuon: '', ngayMuon: '', status: 'ranh' });
+      await api.updateVehicle(vehicle.id, { gvMuon: '', ngayMuon: '', ghiChu: '', status: 'ranh' });
       const entry = {
         id: Date.now().toString(),
         plate: vehicle.plate,
         donVi: vehicle.donVi,
         gvMuon: vehicle.gvMuon,
         ngayMuon: vehicle.ngayMuon,
+        ghiChu: vehicle.ghiChu || '',
         ngayTra: dayjs().format('DD/MM/YYYY HH:mm'),
         action: 'trả',
         createdAt: dayjs().format('DD/MM/YYYY HH:mm:ss')
@@ -547,11 +549,12 @@ const MainApp = ({ user, onLogout }) => {
         <Menu
           mode="inline"
           selectedKeys={[currentMenu]}
-          onClick={({key}) => {
-            if (key === 'users' && !isAdmin) return;
-            setCurrentMenu(key);
-            if (isMobile) setMobileMenuOpen(false);
-          }}
+            onClick={({key}) => {
+              if (key === 'users' && !isAdmin) return;
+              if (key === currentMenu) fetchData();
+              setCurrentMenu(key);
+              if (isMobile) setMobileMenuOpen(false);
+            }}
           items={[
             ...(menuVisibility.students ? [{ key: 'students', icon: <Users size={16}/>, label: 'Quản lý Học viên' }] : []),
             ...(isAdmin ? [
@@ -903,6 +906,24 @@ const MainApp = ({ user, onLogout }) => {
                               📅 {v.ngayMuon}
                             </div>
                           )}
+                          {v.ghiChu && (
+                            <div style={{
+                              marginTop: '4px',
+                              padding: '4px 8px',
+                              background: 'rgba(245, 158, 11, 0.15)',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              color: '#92400e',
+                              fontStyle: 'italic',
+                              cursor: 'pointer'
+                            }} onClick={(e) => {
+                              e.stopPropagation();
+                              const note = prompt('Ghi chú:', v.ghiChu);
+                              if (note !== null) api.updateVehicle(v.id, { ghiChu: note }).then(fetchData).catch(() => {});
+                            }}>
+                              📎 {v.ghiChu}
+                            </div>
+                          )}
                           <Button
                             danger
                             size="small"
@@ -922,6 +943,33 @@ const MainApp = ({ user, onLogout }) => {
                           }}>
                             ✓ Sẵn sàng
                           </div>
+                          {v.ghiChu && (
+                            <div style={{
+                              marginTop: '4px',
+                              padding: '4px 8px',
+                              background: 'rgba(245, 158, 11, 0.15)',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              color: '#92400e',
+                              fontStyle: 'italic',
+                              cursor: 'pointer'
+                            }} onClick={(e) => {
+                              e.stopPropagation();
+                              const note = prompt('Ghi chú:', v.ghiChu);
+                              if (note !== null) api.updateVehicle(v.id, { ghiChu: note }).then(fetchData).catch(() => {});
+                            }}>
+                              📎 {v.ghiChu}
+                            </div>
+                          )}
+                          {!v.ghiChu && (
+                            <Button size="small" type="link" style={{fontSize: 10, padding: 0, marginTop: 4}} onClick={(e) => {
+                              e.stopPropagation();
+                              const note = prompt('Ghi chú cho hộp này:', '');
+                              if (note) api.updateVehicle(v.id, { ghiChu: note }).then(fetchData).catch(() => {});
+                            }}>
+                              + Ghi chú
+                            </Button>
+                          )}
                           <Button
                             type="primary"
                             size="small"
@@ -947,10 +995,13 @@ const MainApp = ({ user, onLogout }) => {
               >
                 <Form form={borrowForm} layout="vertical" onFinish={handleBorrowSubmit}>
                   <Form.Item name="gvMuon" label="Giáo viên mượn" rules={[{ required: true, message: 'Nhập tên giáo viên' }]}>
-                    <Input placeholder="Nhập tên giáo viên" />
+                    <Input placeholder="Nhập tên giáo viên" onPressEnter={() => borrowForm.submit()} />
                   </Form.Item>
                   <Form.Item name="ngayMuon" label="Ngày giờ mượn">
                     <DatePicker showTime format="DD/MM/YYYY HH:mm" style={{width: '100%'}} />
+                  </Form.Item>
+                  <Form.Item name="ghiChu" label="Ghi chú (cam, định vị,...)">
+                    <Input placeholder="Đồ mượn kèm..." />
                   </Form.Item>
                   <Form.Item style={{marginBottom: 0, textAlign: 'right'}}>
                     <Space>
@@ -980,6 +1031,7 @@ const MainApp = ({ user, onLogout }) => {
                     {title: 'Biển số', dataIndex: 'plate', width: 120, render: (t) => <span style={{fontFamily: 'monospace', fontWeight: 600, fontSize: isMobile ? 10 : 13}}>{formatPlate(t)}</span>},
                     {title: 'Đơn vị', dataIndex: 'donVi', width: 110, render: (t) => <Tag color={t === 'An Ninh' ? 'red' : 'green'}>{t}</Tag>},
                     {title: 'Giáo viên', dataIndex: 'gvMuon', width: 150},
+                    {title: 'Ghi chú', dataIndex: 'ghiChu', width: 120, render: (t) => t || '-'},
                     {title: 'Ngày mượn', dataIndex: 'ngayMuon', width: isMobile ? 130 : 150},
                     {title: 'Ngày trả', dataIndex: 'ngayTra', width: isMobile ? 130 : 150, render: (t) => t || '-'},
                     {title: 'Hành động', dataIndex: 'action', width: 90, render: (t) => <Tag color={t === 'mượn' ? 'orange' : 'green'}>{t === 'mượn' ? 'Mượn' : 'Trả'}</Tag>},
