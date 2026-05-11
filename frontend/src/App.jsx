@@ -591,27 +591,27 @@ const MainApp = ({ user, onLogout }) => {
       <Layout>
         <Header style={{background: 'white', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '48px', borderBottom: '1px solid #e2e8f0', boxShadow: 'none'}}>
           <div>
-            <Title level={4} style={{margin:0, color: '#1e293b', fontWeight: 600}}>
-              {currentMenu === 'students' ? 'Hồ sơ học viên' : currentMenu === 'instructors' ? 'Danh mục Giáo viên' : currentMenu === 'vehicles' ? 'Danh mục Xe tập' : currentMenu === 'users' ? 'Quản lý User' : currentMenu === 'settings' ? 'Cài đặt' : 'Hộp DAT'}
+            <Title level={4} style={{margin:0, color: '#1e293b', fontWeight: 600, fontSize: isMobile ? 14 : 24}}>
+              {currentMenu === 'students' ? 'Học viên' : currentMenu === 'instructors' ? 'Giáo viên' : currentMenu === 'vehicles' ? 'Xe tập' : currentMenu === 'users' ? 'User' : currentMenu === 'settings' ? 'Cài đặt' : 'Hộp DAT'}
             </Title>
           </div>
-          <Space>
+          <Space size={isMobile ? 4 : 8}>
             <Dropdown menu={{ items: [
               { key: 'logout', icon: <LogOut size={14}/>, label: 'Đăng xuất', danger: true }
             ], onClick: handleMenuClick }} trigger={['click']}>
-              <Button type="text" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
+              <Button type="text" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 12 }}>
                   {user.username.charAt(0).toUpperCase()}
                 </div>
-                <span style={{ fontWeight: 500 }}>{user.username}</span>
-                <Tag color={isAdmin ? 'blue' : 'default'} style={{ marginLeft: 4 }}>{isAdmin ? 'Admin' : 'Nhân viên'}</Tag>
+                {!isMobile && <span style={{ fontWeight: 500 }}>{user.username}</span>}
+                {!isMobile && <Tag color={isAdmin ? 'blue' : 'default'} style={{ marginLeft: 4 }}>{isAdmin ? 'Admin' : 'NV'}</Tag>}
                 <ChevronDown size={14} />
               </Button>
             </Dropdown>
             {currentMenu === 'students' && (
               <>
                 <Button icon={<Download size={16} />} onClick={exportToExcel} style={{background: '#10b981', color: 'white', border: 'none'}}>
-                  Export Excel
+                  {isMobile ? '' : 'Excel'}
                 </Button>
                 <Upload customRequest={async ({file}) => {
                   try {
@@ -622,85 +622,85 @@ const MainApp = ({ user, onLogout }) => {
                     message.error("Lỗi nhập XML");
                   }
                 }} showUploadList={false}>
-                  <Button type="primary" icon={<FileUp size={16} />}> Nhập XML</Button>
+                  <Button type="primary" icon={<FileUp size={16} />}>{isMobile ? '' : ' Nhập XML'}</Button>
                 </Upload>
               </>
             )}
-            <Button icon={<RefreshCw size={16} />} onClick={fetchData}>Làm mới</Button>
+            <Button icon={<RefreshCw size={16} />} onClick={fetchData}>{isMobile ? '' : 'Làm mới'}</Button>
           </Space>
         </Header>
 
-        <Content style={{padding: '8px', background: 'linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%)'}}>
+        <Content style={{padding: isMobile ? '4px' : '8px', background: 'linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%)'}}>
           {currentMenu === 'students' && (
             <>
-              <div className="stats-row" style={{display: 'flex', gap: '8px', marginBottom: '8px'}}>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)', borderLeft: '4px solid #3b82f6', flex: 1, minWidth: '120px'}}>
+              <div className="stats-row" style={{display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(59, 130, 246, 0.15)', borderLeft: '4px solid #3b82f6', flex: 1, minWidth: isMobile ? '100%' : '120px'}}>
                   <div style={{padding: '6px', borderRadius: '8px', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'white', display: 'flex'}}><Users size={14} /></div>
                   <div>
                     <div style={{fontSize: '10px', color: '#64748b', fontWeight: 500}}>Tổng học viên</div>
-                    <div style={{fontSize: '18px', fontWeight: 700, color: '#1e293b', lineHeight: 1.2}}>{filteredStudents.length}</div>
+                    <div style={{fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#1e293b', lineHeight: 1.2}}>{filteredStudents.length}</div>
                   </div>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(34, 197, 94, 0.15)', borderLeft: '4px solid #22c55e', flex: 1, minWidth: '120px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(34, 197, 94, 0.15)', borderLeft: '4px solid #22c55e', flex: 1, minWidth: isMobile ? '100%' : '120px'}}>
                   <div style={{padding: '6px', borderRadius: '8px', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: 'white', display: 'flex'}}><UserCheck size={14} /></div>
                   <div>
                     <div style={{fontSize: '10px', color: '#64748b', fontWeight: 500}}>Đã Cabin</div>
-                    <div style={{fontSize: '18px', fontWeight: 700, color: '#16a34a', lineHeight: 1.2}}>{filteredStudents.filter(s=>s.cabinStatus==='đã học').length}</div>
+                    <div style={{fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#16a34a', lineHeight: 1.2}}>{filteredStudents.filter(s=>s.cabinStatus==='đã học').length}</div>
                   </div>
                 </div>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(249, 115, 22, 0.15)', borderLeft: '4px solid #f97316', flex: 1, minWidth: '120px'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '8px 12px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(249, 115, 22, 0.15)', borderLeft: '4px solid #f97316', flex: 1, minWidth: isMobile ? '100%' : '120px'}}>
                   <div style={{padding: '6px', borderRadius: '8px', background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white', display: 'flex'}}><RefreshCw size={14} /></div>
                   <div>
                     <div style={{fontSize: '10px', color: '#64748b', fontWeight: 500}}>Chưa phân GV</div>
-                    <div style={{fontSize: '18px', fontWeight: 700, color: '#ea580c', lineHeight: 1.2}}>{filteredStudents.filter(s=>!s.gvSoSan).length}</div>
+                    <div style={{fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#ea580c', lineHeight: 1.2}}>{filteredStudents.filter(s=>!s.gvSoSan).length}</div>
                   </div>
                 </div>
               </div>
 
-              <div className="filter-row" style={{display: 'flex', gap: '8px', marginBottom: '8px'}}>
+              <div className="filter-row" style={{display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
                 <Input
-                  placeholder="Tìm kiếm theo tên hoặc CCCD..."
+                  placeholder="Tìm kiếm..."
                   prefix={<span style={{color: '#94a3b8'}}>🔍</span>}
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  style={{flex: 1, borderRadius: '8px', border: '1px solid #e2e8f0'}}
+                  style={{flex: 1, borderRadius: '8px', border: '1px solid #e2e8f0', minWidth: isMobile ? '100%' : undefined}}
                   allowClear
                 />
                 <Select
-                  placeholder="Lọc theo lớp"
+                  placeholder="Lọc lớp"
                   value={selectedClass}
                   onChange={(val) => { setSelectedClass(val); }}
                   allowClear
-                  style={{width: '180px', borderRadius: '8px'}}
+                  style={{width: isMobile ? '100%' : '160px', borderRadius: '8px'}}
                   options={uniqueClasses.map(c => ({label: c, value: c}))}
                 />
                 {selectedClass && (
                   <Popconfirm
-                    title={`Xóa toàn bộ học viên lớp "${selectedClass}"?`}
-                    description="Hành động này không thể hoàn tác"
+                    title={`Xóa lớp "${selectedClass}"?`}
+                    description="Không thể hoàn tác"
                     onConfirm={async () => {
                       try {
                         await api.deleteClass(selectedClass);
-                        message.success('Đã xóa khóa học');
+                        message.success('Đã xóa');
                         setSelectedClass(null);
                         fetchData();
                       } catch (e) {
-                        message.error('Lỗi xóa khóa học');
+                        message.error('Lỗi');
                       }
                     }}
                     okText="Xóa"
                     cancelText="Hủy"
                     okButtonProps={{ danger: true }}
                   >
-                    <Button danger icon={<Trash2 size={16} />}>
-                      Xóa lớp
+                    <Button danger icon={<Trash2 size={16} />} size={isMobile ? 'small' : 'middle'}>
+                      Xóa
                     </Button>
                   </Popconfirm>
                 )}
                 <Select
                   value={selectedDot}
                   onChange={(val) => { setSelectedDot(val); }}
-                  style={{width: '110px', borderRadius: '8px'}}
+                  style={{width: isMobile ? '100%' : '100px', borderRadius: '8px'}}
                   options={[
                     { label: 'Đợt 1', value: '1' },
                     { label: 'Đợt 2', value: '2' },
@@ -716,7 +716,8 @@ const MainApp = ({ user, onLogout }) => {
                   rowKey="id"
                   loading={loading}
                   size="small"
-                  pagination={{ pageSize: 20, showSizeChanger: true, showTotal: (t) => `${t} học viên` }}
+                  scroll={isMobile ? { x: 'max-content' } : undefined}
+                  pagination={{ pageSize: isMobile ? 10 : 20, showSizeChanger: !isMobile, showTotal: (t) => `${t} học viên` }}
                 />
               </Card>
             </>
@@ -730,10 +731,10 @@ const MainApp = ({ user, onLogout }) => {
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
               extra={<span style={{color: '#94a3b8', fontSize: '12px'}}>{instructors.length} giáo viên</span>}
             >
-              <Form layout="inline" style={{marginBottom: '12px', padding: '8px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await api.addInstructor(v); fetchData(); message.success('Thêm giáo viên thành công');}}>
-                <Form.Item name="name" required style={{flex: 1, marginBottom: 0}}><Input placeholder="Tên giáo viên" /></Form.Item>
-                <Form.Item name="type" initialValue="Số sàn" style={{marginBottom: 0, minWidth: '130px'}}><Select options={[{value:'Số sàn'}, {value:'Tự động'}]}/></Form.Item>
-                <Button type="primary" htmlType="submit" icon={<Plus size={16}/>}>Thêm</Button>
+              <Form layout={isMobile ? 'vertical' : 'inline'} style={{marginBottom: '12px', padding: '8px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v)=>{await api.addInstructor(v); fetchData(); message.success('Thêm giáo viên thành công');}}>
+                <Form.Item name="name" required style={{flex: 1, marginBottom: isMobile ? 8 : 0}}><Input placeholder="Tên giáo viên" /></Form.Item>
+                <Form.Item name="type" initialValue="Số sàn" style={{marginBottom: isMobile ? 8 : 0, minWidth: '130px'}}><Select options={[{value:'Số sàn'}, {value:'Tự động'}]}/></Form.Item>
+                <Button type="primary" htmlType="submit" icon={<Plus size={16}/>} block={isMobile}>Thêm</Button>
               </Form>
               <Table dataSource={instructors} rowKey="id" columns={[
                 {title: 'STT', render: (_, __, i) => i + 1, width: 60},
@@ -752,17 +753,17 @@ const MainApp = ({ user, onLogout }) => {
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
               extra={<span style={{color: '#94a3b8', fontSize: '12px'}}>{vehicles.length} xe</span>}
             >
-              <Form layout="inline" style={{marginBottom: '12px', padding: '8px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v) => {
+              <Form layout={isMobile ? 'vertical' : 'inline'} style={{marginBottom: '12px', padding: '8px', background: '#f8fafc', borderRadius: '8px'}} onFinish={async (v) => {
                 await api.addVehicle(v);
                 message.success('Thêm xe thành công');
                 fetchData();
               }}>
-                <Form.Item name="plate" required style={{flex: 1, marginBottom: 0}}><Input placeholder="Biển số xe" /></Form.Item>
-                <Form.Item name="type" initialValue="Số sàn" style={{marginBottom: 0, minWidth: '130px'}}><Select options={[{value:'Số sàn'}, {value:'Tự động'}]}/></Form.Item>
-                <Form.Item name="donVi" initialValue="An Ninh" style={{marginBottom: 0, minWidth: '130px'}}>
+                <Form.Item name="plate" required style={{flex: 1, marginBottom: isMobile ? 8 : 0}}><Input placeholder="Biển số xe" /></Form.Item>
+                <Form.Item name="type" initialValue="Số sàn" style={{marginBottom: isMobile ? 8 : 0, minWidth: '130px'}}><Select options={[{value:'Số sàn'}, {value:'Tự động'}]}/></Form.Item>
+                <Form.Item name="donVi" initialValue="An Ninh" style={{marginBottom: isMobile ? 8 : 0, minWidth: '130px'}}>
                   <Select options={[{value:'An Ninh', label:'An Ninh'}, {value:'Hoàng Thịnh', label:'Hoàng Thịnh'}]}/>
                 </Form.Item>
-                <Button type="primary" htmlType="submit" icon={<Plus size={16}/>}>Thêm</Button>
+                <Button type="primary" htmlType="submit" icon={<Plus size={16}/>} block={isMobile}>Thêm</Button>
               </Form>
               <Table dataSource={vehicles} rowKey="id" columns={[
                 {title: 'STT', render: (_, __, i) => i + 1, width: 60},
@@ -811,20 +812,22 @@ const MainApp = ({ user, onLogout }) => {
                   </Card>
                 </div>
 
-                <div style={{marginBottom: '8px', display: 'flex', gap: '6px'}}>
+                <div style={{marginBottom: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap'}}>
                   <Button
                     type={activeTab === 'an_ninh' ? 'primary' : 'default'}
+                    size={isMobile ? 'small' : 'middle'}
                     onClick={() => setActiveTab('an_ninh')}
-                    style={{background: activeTab === 'an_ninh' ? '#dc2626' : undefined}}
+                    style={{background: activeTab === 'an_ninh' ? '#dc2626' : undefined, fontSize: isMobile ? 11 : 14}}
                   >
-                    <Tag color="red">An Ninh</Tag> {vehicles.filter(v => v.donVi === 'An Ninh').length} hộp
+                    An Ninh ({vehicles.filter(v => v.donVi === 'An Ninh').length})
                   </Button>
                   <Button
                     type={activeTab === 'hoang_thinh' ? 'primary' : 'default'}
+                    size={isMobile ? 'small' : 'middle'}
                     onClick={() => setActiveTab('hoang_thinh')}
-                    style={{background: activeTab === 'hoang_thinh' ? '#16a34a' : undefined}}
+                    style={{background: activeTab === 'hoang_thinh' ? '#16a34a' : undefined, fontSize: isMobile ? 11 : 14}}
                   >
-                    <Tag color="green">Hoàng Thịnh</Tag> {vehicles.filter(v => v.donVi === 'Hoàng Thịnh').length} hộp
+                    Hoàng Thịnh ({vehicles.filter(v => v.donVi === 'Hoàng Thịnh').length})
                   </Button>
                 </div>
 
@@ -836,7 +839,7 @@ const MainApp = ({ user, onLogout }) => {
                   allowClear
                 />
 
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px'}}>
+                <div style={{display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 140 : 180}px, 1fr))`, gap: '8px'}}>
                   {(activeTab === 'an_ninh'
                     ? vehicles.filter(v => v.donVi === 'An Ninh')
                     : vehicles.filter(v => v.donVi === 'Hoàng Thịnh')
@@ -945,6 +948,8 @@ const MainApp = ({ user, onLogout }) => {
                 open={!!selectedVehicle}
                 onCancel={() => setSelectedVehicle(null)}
                 footer={null}
+                width={isMobile ? '100%' : 520}
+                style={isMobile ? { top: 0, maxWidth: '100%' } : undefined}
               >
                 <Form form={borrowForm} layout="vertical" onFinish={handleBorrowSubmit}>
                   <Form.Item name="gvMuon" label="Giáo viên mượn" rules={[{ required: true, message: 'Nhập tên giáo viên' }]}>
@@ -967,22 +972,24 @@ const MainApp = ({ user, onLogout }) => {
                 open={showHistory}
                 onCancel={() => setShowHistory(false)}
                 footer={<Button danger onClick={() => { saveHistory([]); api.clearBoxHistory().catch(() => {}); message.success('Đã xóa lịch sử'); }}>Xóa lịch sử</Button>}
-                width={900}
+                width={isMobile ? '100%' : 900}
+                style={isMobile ? { top: 0, maxWidth: '100%' } : undefined}
               >
                 <Table
                   dataSource={boxHistory}
                   rowKey="id"
                   size="small"
+                  scroll={isMobile ? { x: 'max-content' } : undefined}
                   pagination={{ pageSize: 15, showTotal: (t) => `${t} lượt` }}
                   columns={[
                     {title: 'STT', render: (_, __, i) => i + 1, width: 50},
-                    {title: 'Biển số', dataIndex: 'plate', width: 120, render: (t) => <span style={{fontFamily: 'monospace', fontWeight: 600}}>{formatPlate(t)}</span>},
+                    {title: 'Biển số', dataIndex: 'plate', width: 120, render: (t) => <span style={{fontFamily: 'monospace', fontWeight: 600, fontSize: isMobile ? 10 : 13}}>{formatPlate(t)}</span>},
                     {title: 'Đơn vị', dataIndex: 'donVi', width: 110, render: (t) => <Tag color={t === 'An Ninh' ? 'red' : 'green'}>{t}</Tag>},
                     {title: 'Giáo viên', dataIndex: 'gvMuon', width: 150},
-                    {title: 'Ngày mượn', dataIndex: 'ngayMuon', width: 150},
-                    {title: 'Ngày trả', dataIndex: 'ngayTra', width: 150, render: (t) => t || '-'},
+                    {title: 'Ngày mượn', dataIndex: 'ngayMuon', width: isMobile ? 130 : 150},
+                    {title: 'Ngày trả', dataIndex: 'ngayTra', width: isMobile ? 130 : 150, render: (t) => t || '-'},
                     {title: 'Hành động', dataIndex: 'action', width: 90, render: (t) => <Tag color={t === 'mượn' ? 'orange' : 'green'}>{t === 'mượn' ? 'Mượn' : 'Trả'}</Tag>},
-                    {title: 'Ghi nhận', dataIndex: 'createdAt', width: 150},
+                    {title: 'Ghi nhận', dataIndex: 'createdAt', width: isMobile ? 130 : 150},
                   ]}
                 />
               </Modal>
@@ -997,13 +1004,13 @@ const MainApp = ({ user, onLogout }) => {
               style={{boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px'}}
               extra={<span style={{color: '#94a3b8', fontSize: '12px'}}>{users.length} user</span>}
             >
-              <Form layout="inline" style={{marginBottom: '12px', padding: '8px', background: '#f8fafc', borderRadius: '8px'}} onFinish={addUser}>
-                <Form.Item name="username" required style={{flex: 1, marginBottom: 0}}><Input placeholder="Tài khoản" /></Form.Item>
-                <Form.Item name="password" required style={{flex: 1, marginBottom: 0, minWidth: '150px'}}><Input.Password placeholder="Mật khẩu" /></Form.Item>
-                <Form.Item name="role" initialValue="staff" style={{marginBottom: 0, minWidth: '130px'}}>
+              <Form layout={isMobile ? 'vertical' : 'inline'} style={{marginBottom: '12px', padding: '8px', background: '#f8fafc', borderRadius: '8px'}} onFinish={addUser}>
+                <Form.Item name="username" required style={{flex: 1, marginBottom: isMobile ? 8 : 0}}><Input placeholder="Tài khoản" /></Form.Item>
+                <Form.Item name="password" required style={{flex: 1, marginBottom: isMobile ? 8 : 0, minWidth: '150px'}}><Input.Password placeholder="Mật khẩu" /></Form.Item>
+                <Form.Item name="role" initialValue="staff" style={{marginBottom: isMobile ? 8 : 0, minWidth: '130px'}}>
                   <Select options={[{value:'admin', label: 'Admin'}, {value:'staff', label: 'Nhân viên'}]}/>
                 </Form.Item>
-                <Button type="primary" htmlType="submit" icon={<Plus size={16}/>}>Thêm User</Button>
+                <Button type="primary" htmlType="submit" icon={<Plus size={16}/>} block={isMobile}>Thêm User</Button>
               </Form>
               <Table dataSource={users} rowKey="id" columns={[
                 {title: 'STT', render: (_, __, i) => i + 1, width: 60},
